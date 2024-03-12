@@ -78,7 +78,7 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
         glGetProgramInfoLog(programHandle, infoLogBufferSize, &infoLogSize, infoLogBuffer);
         ELOG("glLinkProgram() failed with program %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
     }
-
+    
     glUseProgram(0);
 
     glDetachShader(programHandle, vshader);
@@ -180,10 +180,11 @@ u32 LoadTexture2D(App* app, const char* filepath)
 
 void Init(App* app)
 {
-    // TODO: Initialize your resources here!
+    /* TODO: Initialize your resources here! */
     // - vertex buffers
     // - element/index buffers
     // - vaos
+    
     const VertexV3V2 vertices[] = {
         {glm::vec3(-0.5, -0.5, 0.0), glm::vec2(0.0, 0.0)}, // bottom-left vertex
         {glm::vec3(0.5, -0.5, 0.0), glm::vec2(1.0, 0.0)}, // bottom-right vertex
@@ -212,9 +213,9 @@ void Init(App* app)
     glBindVertexArray(app->vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)0); //layout (location = 0)
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)12);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)sizeof(glm::vec3)); //layout (location = 1)
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
 
@@ -268,14 +269,14 @@ void Render(App* app)
 
                 glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                
                 Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
                 glUseProgram(programTexturedGeometry.handle);
                 glBindVertexArray(app->vao);
-
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-                glUniform1f(app->programUniformTexture, 0);
+                
+                glUniform1i(app->programUniformTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
                 glActiveTexture(GL_TEXTURE0);
                 GLuint textureHandle = app->textures[app->diceTexIdx].handle;
                 glBindTexture(GL_TEXTURE_2D, textureHandle);

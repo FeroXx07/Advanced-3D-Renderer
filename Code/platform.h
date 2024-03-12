@@ -15,6 +15,8 @@
 #include <vector>
 #include <string>
 
+#include "glad/glad.h"
+
 #pragma warning(disable : 4267) // conversion from X to Y, possible loss of data
 
 typedef char                   i8;
@@ -108,3 +110,4 @@ LogString(logBuffer);             \
 #define TAU 6.28318530718f
 
 void RetrieveOpenGLContext();
+

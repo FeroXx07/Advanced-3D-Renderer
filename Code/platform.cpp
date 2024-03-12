@@ -24,6 +24,8 @@
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 
+#include "ErrorsSupport.h"
+
 #define WINDOW_TITLE  "Advanced Graphics Programming"
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 600
@@ -122,19 +124,19 @@ int main()
     app.displaySize = ivec2(WINDOW_WIDTH, WINDOW_HEIGHT);
     app.isRunning   = true;
 
-		glfwSetErrorCallback(OnGlfwError);
+    glfwSetErrorCallback(OnGlfwError);
 
     if (!glfwInit())
     {
         ELOG("glfwInit() failed\n");
         return -1;
     }
-
+    
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL, NULL);
     if (!window)
     {
@@ -161,6 +163,9 @@ int main()
         return -1;
     }
 
+    glEnable( GL_DEBUG_OUTPUT );
+    glDebugMessageCallback( OnGlError, &app );
+    
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
@@ -414,19 +419,19 @@ void LogString(const char* str)
 
 void RetrieveOpenGLContext()
 {
-    std::cout << "OpenGL version:" << std::endl;
-    std::cout << glGetString(GL_VERSION) << std::endl << std::endl;
+    std::cout << "OpenGL version:" << '\n';
+    std::cout << glGetString(GL_VERSION) << '\n' << '\n';
 
-    std::cout << "OpenGL renderer:" << std::endl;
-    std::cout << glGetString(GL_RENDERER) << std::endl << std::endl;
+    std::cout << "OpenGL renderer:" << '\n';
+    std::cout << glGetString(GL_RENDERER) << '\n' << '\n';
 
-    std::cout << "OpenGL vendor:" << std::endl;
-    std::cout << glGetString(GL_VENDOR) << std::endl << std::endl;
+    std::cout << "OpenGL vendor:" << '\n';
+    std::cout << glGetString(GL_VENDOR) << '\n' << '\n';
 
-    std::cout << "OpenGL GLSL version:" << std::endl;
-    std::cout << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl << std::endl;
+    std::cout << "OpenGL GLSL version:" << '\n';
+    std::cout << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n' << '\n';
 
-    std::cout << "OpenGL extensions:" << std::endl;
+    std::cout << "OpenGL extensions:" << '\n';
     GLint num_extensions;
     glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
     for (int i = 0; i < num_extensions; i++)
@@ -434,5 +439,5 @@ void RetrieveOpenGLContext()
         const u8* str = glGetStringi(GL_EXTENSIONS, GLuint(i));
         std::cout << str << " ";
     }
-    std::cout << std::endl;
+    std::cout << '\n';
 }

@@ -5,10 +5,10 @@
 
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
-layout(location-0) in vec3 aPosition;
-layout(location-1) in vec2 aTextCoord;
+layout(location = 0) in vec3 aPosition; // www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)
+layout(location = 1) in vec2 aTextCoord;
 
-out vec2 vTextCoord;
+layout(location = 3) out vec2 vTextCoord;
 
 void main()
 {
@@ -18,16 +18,16 @@ void main()
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
-in vec2 vTextCoord;
+uniform sampler2D uTexture; // www.khronos.org/opengl/wiki/Uniform_(GLSL)
 
-uniform sampler2D uTexture;
-
-layout(location-0) out vec4 oColor;
+layout(location = 0) out vec4 oColor;
+layout(location = 3) in vec2 vTextCoord;
 
 void main()
 {
     oColor = texture(uTexture, vTextCoord);
 }
+
 #endif
 #endif
 
