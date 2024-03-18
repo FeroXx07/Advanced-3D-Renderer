@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stb_image.h>
 
+#include "assimp_model_loading.h"
 #include "program.h"
 #include "texture.h"
 #include "vertex.h"
@@ -45,8 +46,8 @@ void Init(App* app)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glGenBuffers(1, &mesh.indexBuferHandle);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuferHandle);
+    glGenBuffers(1, &mesh.indexBufferHandle);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBufferHandle);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -118,6 +119,8 @@ void Init(App* app)
     app->magentaTexIdx = TextureSupport::LoadTexture2D(app, "color_magenta.png");
 
     app->mode = Mode_TexturedQuad;
+
+    app->model = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
 }
 
 void Gui(const App* app)
@@ -192,7 +195,7 @@ void Render(App* app)
                 glUseProgram(program.handle);
 
                 const Model& model = app->models[app->model];
-                Mesh& mesh = app->meshes[0];
+                Mesh& mesh = app->meshes[model.meshIdx];
 
                 const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
                 for (u32 i = 0; i < subMeshCount; i++)
@@ -200,11 +203,11 @@ void Render(App* app)
                     const GLuint vao = VAOSupport::FindVAO(mesh, i, program);
                     glBindVertexArray(vao);
 
-                    //const u32 subMeshMaterialIdx = model.materialIdx[i];
-                    //const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+                    const u32 subMeshMaterialIdx = model.materialIdx[i];
+                    const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[app->diceTexIdx].handle);
+                    glBindTexture(GL_TEXTURE_2D, app->textures[subMeshMaterial.albedoTextureIdx].handle);
                     glUniform1i(app->texturedMeshProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
 
                     SubMesh& subMesh = mesh.subMeshes[i];
@@ -321,7 +324,7 @@ void VAOSupport::CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Pr
     glBindVertexArray(vaoHandle);
 
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferHandle);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuferHandle);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBufferHandle);
 
     // We have to link all vertex inputs attributes to attributes in the vertex buffer
     const u32 programAttributesCount = (u32)program.vertexInputLayout.attributes.size();
@@ -335,6 +338,7 @@ void VAOSupport::CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Pr
             {
                 const u32 index = subMesh.vertexBufferLayout.attributes[j].location;
                 const u32 nComp = subMesh.vertexBufferLayout.attributes[j].componentCount;
+                // Since it shares the same buffers in the mesh it will use its corresponding array rang with vertex offset here, and indices offset when glDrawElements
                 const u32 offset = subMesh.vertexBufferLayout.attributes[j].offset + subMesh.vertexOffset; // attribute offset + vertex offset
                 const u32 stride = subMesh.vertexBufferLayout.stride;
                 glVertexAttribPointer(index, nComp, GL_FLOAT, GL_FALSE, stride, (void*)(u64)offset);

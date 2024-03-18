@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Code\assimp_model_loading.cpp" />
     <ClCompile Include="Code\engine.cpp" />
     <ClCompile Include="Code\platform.cpp" />
     <ClCompile Include="ThirdParty\glad\include\glad\glad.c" />
@@ -33,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Code\app.h" />
+    <ClInclude Include="Code\assimp_model_loading.h" />
     <ClInclude Include="Code\engine.h" />
     <ClInclude Include="Code\errors_support.h" />
     <ClInclude Include="Code\mesh.h" />

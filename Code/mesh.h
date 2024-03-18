@@ -23,7 +23,7 @@ struct Mesh
 {
     std::vector<SubMesh> subMeshes;
     GLuint vertexBufferHandle;
-    GLuint indexBuferHandle;
+    GLuint indexBufferHandle;
 };
 
 struct Material
