@@ -32,9 +32,14 @@
     <ClCompile Include="ThirdParty\stb\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Code\app.h" />
     <ClInclude Include="Code\engine.h" />
-    <ClInclude Include="Code\ErrorsSupport.h" />
+    <ClInclude Include="Code\errors_support.h" />
+    <ClInclude Include="Code\mesh.h" />
     <ClInclude Include="Code\platform.h" />
+    <ClInclude Include="Code\program.h" />
+    <ClInclude Include="Code\texture.h" />
+    <ClInclude Include="Code\vertex.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\glad.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\khrplatform.h" />
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h" />
@@ -49,6 +54,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="WorkingDir\shaded_model.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

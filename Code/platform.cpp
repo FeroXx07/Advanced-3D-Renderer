@@ -24,7 +24,7 @@
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 
-#include "ErrorsSupport.h"
+#include "errors_support.h"
 
 #define WINDOW_TITLE  "Advanced Graphics Programming"
 #define WINDOW_WIDTH  800
@@ -417,21 +417,27 @@ void LogString(const char* str)
 #endif
 }
 
-void RetrieveOpenGLContext()
+
+OpenGlContext RetrieveOpenGLContext()
 {
-    std::cout << "OpenGL version:" << '\n';
-    std::cout << glGetString(GL_VERSION) << '\n' << '\n';
+    OpenGlContext ctx;
+    ctx.version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+   // std::cout << "OpenGL version:" << '\n';
+   // std::cout << ctx.version << '\n' << '\n';
 
-    std::cout << "OpenGL renderer:" << '\n';
-    std::cout << glGetString(GL_RENDERER) << '\n' << '\n';
+    ctx.renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+   // std::cout << "OpenGL renderer:" << '\n';
+   // std::cout <<  ctx.renderer << '\n' << '\n';
 
-    std::cout << "OpenGL vendor:" << '\n';
-    std::cout << glGetString(GL_VENDOR) << '\n' << '\n';
+    ctx.vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+   // std::cout << "OpenGL vendor:" << '\n';
+   // std::cout << ctx.vendor << '\n' << '\n';
 
-    std::cout << "OpenGL GLSL version:" << '\n';
-    std::cout << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n' << '\n';
+    ctx.glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+  //  std::cout << "OpenGL GLSL version:" << '\n';
+  //  std::cout << ctx.glslVersion << '\n' << '\n';
 
-    std::cout << "OpenGL extensions:" << '\n';
+ /*   std::cout << "OpenGL extensions:" << '\n';
     GLint num_extensions;
     glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
     for (int i = 0; i < num_extensions; i++)
@@ -439,5 +445,7 @@ void RetrieveOpenGLContext()
         const u8* str = glGetStringi(GL_EXTENSIONS, GLuint(i));
         std::cout << str << " ";
     }
-    std::cout << '\n';
+    std::cout << '\n' << '\n' << '\n';
+*/
+    return ctx;
 }

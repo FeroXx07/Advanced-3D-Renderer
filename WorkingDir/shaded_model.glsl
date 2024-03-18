@@ -1,27 +1,36 @@
+﻿///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-#ifdef TEXTURED_GEOMETRY
+#ifdef SHADED_MODEL
 
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
 layout(location = 0) in vec3 aPosition; // www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)
+// layout(location = 1) in vec2 aNormal;
 layout(location = 1) in vec2 aTextCoord;
+// layout(location = 3) in vec2 aTangent;
+// layout(location = 4) in vec2 aBitangent;
 
-layout(location = 3) out vec2 vTextCoord;
+layout(location = 5) out vec2 vTextCoord;
 
 void main()
 {
     vTextCoord = aTextCoord;
-    gl_Position = vec4(aPosition, 1.0);
+    
+    float clippingScale = 5.0;
+    gl_Position = vec4(aPosition, clippingScale);
+    
+    // Patrick looks away from the camera by default
+    gl_Position.z = -gl_Position.z;
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
 uniform sampler2D uTexture; // www.khronos.org/opengl/wiki/Uniform_(GLSL)
 
+layout(location = 5) in vec2 sTextCoord;
+
 layout(location = 0) out vec4 oColor;
-layout(location = 3) in vec2 sTextCoord;
 
 void main()
 {

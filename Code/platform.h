@@ -7,12 +7,8 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
-#include <assert.h>
-#include <math.h>
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <vector>
 #include <string>
 
 #include "glad/glad.h"
@@ -23,12 +19,19 @@ typedef char                   i8;
 typedef short                  i16;
 typedef int                    i32;
 typedef long long int          i64;
-typedef unsigned char          u8;
+typedef unsigned char          u8; // 0...255
 typedef unsigned short         u16;
 typedef unsigned int           u32;
 typedef unsigned long long int u64;
 typedef float                  f32;
 typedef double                 f64;
+
+typedef glm::vec2  vec2;
+typedef glm::vec3  vec3;
+typedef glm::vec4  vec4;
+typedef glm::ivec2 ivec2;
+typedef glm::ivec3 ivec3;
+typedef glm::ivec4 ivec4;
 
 enum MouseButton {
     LEFT,
@@ -109,5 +112,40 @@ LogString(logBuffer);             \
 #define PI  3.14159265359f
 #define TAU 6.28318530718f
 
-void RetrieveOpenGLContext();
+struct OpenGlContext
+{
+    char versionO[64];
+    std::string version;
+    std::string renderer;
+    std::string vendor;
+    std::string glslVersion;
+};
 
+OpenGlContext RetrieveOpenGLContext();
+
+inline std::string convertOpenGLDataTypeToString(u32 dataType) {
+    switch(dataType) {
+    case 5126: return "Float";
+    case 35674: return "FloatMat2";
+    case 35685: return "FloatMat2x3";
+    case 35686: return "FloatMat2x4";
+    case 35675: return "FloatMat3";
+    case 35687: return "FloatMat3x2";
+    case 35688: return "FloatMat3x4";
+    case 35676: return "FloatMat4";
+    case 35689: return "FloatMat4x2";
+    case 35690: return "FloatMat4x3";
+    case 35664: return "FloatVec2";
+    case 35665: return "FloatVec3";
+    case 35666: return "FloatVec4";
+    case 5124: return "Int";
+    case 35667: return "IntVec2";
+    case 35668: return "IntVec3";
+    case 35669: return "IntVec4";
+    case 5125: return "UnsignedInt";
+    case 36294: return "UnsignedIntVec2";
+    case 36295: return "UnsignedIntVec3";
+    case 36296: return "UnsignedIntVec4";
+    default: return "Unknown";
+    }
+}
