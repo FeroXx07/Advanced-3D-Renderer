@@ -87,8 +87,11 @@ void Init(App* app)
     app->models.push_back(model);
     
     // - programs (and retrieve uniform indices)
-    app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
-    
+    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
+    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.vert", "shaders.frag", "TEXTURED_GEOMETRY");
+    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaded.vert", "shaded.frag", "SHADED");
+    app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaded.glsl", "SHADED_MODEL");
+
     // Fill vertex shader layout auto
     Program& program = app->programs[app->texturedGeometryProgramIdx];
     int programAttributesCount = 0;
@@ -153,14 +156,26 @@ void Update(App* app)
     for (u64 i = 0; i < app->programs.size(); ++i)
     {
         Program& program = app->programs[i];
-        const u64 currentTimeStamp = GetFileLastWriteTimestamp(program.filepath.c_str());
-        if (currentTimeStamp > program.lastWriteTimestamp)
+        for (u64 j = 0; j < program.filepaths.size(); ++j)
         {
-            glDeleteProgram(program.handle);
-            const String programSource = ReadTextFile(program.filepath.c_str());
-            const char* programName = program.programName.c_str();
-            program.handle = ShaderSupport::CreateProgramFromSource(programSource, programName);
-            program.lastWriteTimestamp = currentTimeStamp;
+            const u64 currentTimeStamp = GetFileLastWriteTimestamp(program.filepaths[j].c_str());
+            if (currentTimeStamp > program.lastWriteTimestamp)
+            {
+                glDeleteProgram(program.handle);
+                const char* programName = program.programName.c_str();
+                if (program.filepaths.size() > 1)
+                {
+                    const String programSourceVert = ReadTextFile(program.filepaths[0].c_str());
+                    const String programSourceFrag = ReadTextFile(program.filepaths[1].c_str());
+                    program.handle = ShaderSupport::CreateProgramFromSource(programSourceVert.str, programSourceFrag.str, programName);
+                }
+                else
+                {
+                    const String programSource = ReadTextFile(program.filepaths[j].c_str());
+                    program.handle = ShaderSupport::CreateProgramFromSource(programSource.str, programName);
+                }
+                program.lastWriteTimestamp = currentTimeStamp;
+            }
         }
     }
 }
@@ -179,44 +194,44 @@ void Render(App* app)
     
     switch (app->mode)
     {
-        case Mode_TexturedQuad:
+    case Mode_TexturedQuad:
+        {
+            // TODO: Draw your textured quad here!
+            // - clear the framebuffer
+            // - set the viewport
+            // - set the blending state
+            // - bind the texture into unit 0
+            // - bind the program 
+            //   (...and make its texture sample from unit 0)
+            // - bind the vao
+            // - glDrawElements() !!!
+
+            const Program& program = app->programs[app->texturedGeometryProgramIdx];
+            glUseProgram(program.handle);
+
+            const Model& model = app->models[app->model];
+            Mesh& mesh = app->meshes[model.meshIdx];
+
+            const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
+            for (u32 i = 0; i < subMeshCount; i++)
             {
-                // TODO: Draw your textured quad here!
-                // - clear the framebuffer
-                // - set the viewport
-                // - set the blending state
-                // - bind the texture into unit 0
-                // - bind the program 
-                //   (...and make its texture sample from unit 0)
-                // - bind the vao
-                // - glDrawElements() !!!
+                const GLuint vao = VAOSupport::FindVAO(mesh, i, program);
+                glBindVertexArray(vao);
 
-                const Program& program = app->programs[app->texturedGeometryProgramIdx];
-                glUseProgram(program.handle);
+                const u32 subMeshMaterialIdx = model.materialIdx[i];
+                const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
 
-                const Model& model = app->models[app->model];
-                Mesh& mesh = app->meshes[model.meshIdx];
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, app->textures[subMeshMaterial.albedoTextureIdx].handle);
+                glUniform1i(app->texturedMeshProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
 
-                const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
-                for (u32 i = 0; i < subMeshCount; i++)
-                {
-                    const GLuint vao = VAOSupport::FindVAO(mesh, i, program);
-                    glBindVertexArray(vao);
-
-                    const u32 subMeshMaterialIdx = model.materialIdx[i];
-                    const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
-
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[subMeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i(app->texturedMeshProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
-
-                    SubMesh& subMesh = mesh.subMeshes[i];
-                    glDrawElements(GL_TRIANGLES, static_cast<u32>(subMesh.indices.size()), GL_UNSIGNED_INT, (void*)static_cast<u64>(subMesh.indexOffset));
-                }
+                SubMesh& subMesh = mesh.subMeshes[i];
+                glDrawElements(GL_TRIANGLES, static_cast<u32>(subMesh.indices.size()), GL_UNSIGNED_INT, (void*)static_cast<u64>(subMesh.indexOffset));
             }
-            break;
-        case Mode_Count:
-            break;
+        }
+        break;
+    case Mode_Count:
+        break;
     }
     glPopDebugGroup();
 }
@@ -224,94 +239,160 @@ void Render(App* app)
 
 
 
-inline GLuint ShaderSupport::CreateProgramFromSource(String programSource, const char* shaderName)
+inline GLuint ShaderSupport::CreateProgramFromSource(std::string programSource, const char* shaderName)
 {
-        GLchar infoLogBuffer[1024] = {};
-        GLsizei infoLogBufferSize = sizeof(infoLogBuffer);
-        GLsizei infoLogSize;
-        GLint success;
+    GLchar infoLogBuffer[1024] = {};
+    GLsizei infoLogBufferSize = sizeof(infoLogBuffer);
+    GLsizei infoLogSize;
+    GLint success;
 
-        char versionString[] = "#version 430\n";
-        char shaderNameDefine[128];
-        sprintf(shaderNameDefine, "#define %s\n", shaderName);
-        char vertexShaderDefine[] = "#define VERTEX\n";
-        char fragmentShaderDefine[] = "#define FRAGMENT\n";
+    char versionString[] = "#version 430\n";
+    char shaderNameDefine[128];
+    sprintf(shaderNameDefine, "#define %s\n", shaderName);
+    char vertexShaderDefine[] = "#define VERTEX\n";
+    char fragmentShaderDefine[] = "#define FRAGMENT\n";
 
-        const GLchar* vertexShaderSource[] = {
-            versionString,
-            shaderNameDefine,
-            vertexShaderDefine,
-            programSource.str
-        };
-        const GLint vertexShaderLengths[] = {
-            (GLint)strlen(versionString),
-            (GLint)strlen(shaderNameDefine),
-            (GLint)strlen(vertexShaderDefine),
-            (GLint)programSource.len
-        };
-        const GLchar* fragmentShaderSource[] = {
-            versionString,
-            shaderNameDefine,
-            fragmentShaderDefine,
-            programSource.str
-        };
-        const GLint fragmentShaderLengths[] = {
-            (GLint)strlen(versionString),
-            (GLint)strlen(shaderNameDefine),
-            (GLint)strlen(fragmentShaderDefine),
-            (GLint)programSource.len
-        };
+    const GLchar* vertexShaderSource[] = {
+        versionString,
+        shaderNameDefine,
+        vertexShaderDefine,
+        programSource.c_str()
+    };
+    const GLint vertexShaderLengths[] = {
+        (GLint)strlen(versionString),
+        (GLint)strlen(shaderNameDefine),
+        (GLint)strlen(vertexShaderDefine),
+        (GLint)programSource.size()
+    };
+    const GLchar* fragmentShaderSource[] = {
+        versionString,
+        shaderNameDefine,
+        fragmentShaderDefine,
+        programSource.c_str()
+    };
+    const GLint fragmentShaderLengths[] = {
+        (GLint)strlen(versionString),
+        (GLint)strlen(shaderNameDefine),
+        (GLint)strlen(fragmentShaderDefine),
+        (GLint)programSource.size()
+    };
 
-        const GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vShader, std::size(vertexShaderSource), vertexShaderSource, vertexShaderLengths);
-        glCompileShader(vShader);
-        glGetShaderiv(vShader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(vShader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-            ELOG("glCompileShader() failed with vertex shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer)
-        }
+    const GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vShader, std::size(vertexShaderSource), vertexShaderSource, vertexShaderLengths);
+    glCompileShader(vShader);
+    glGetShaderiv(vShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vShader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
+        ELOG("glCompileShader() failed with vertex shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer)
+    }
 
-        const GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fShader, std::size(fragmentShaderSource), fragmentShaderSource, fragmentShaderLengths);
-        glCompileShader(fShader);
-        glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(fShader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-            ELOG("glCompileShader() failed with fragment shader %s\nReported message:\n%s\n", shaderName,
-                 infoLogBuffer)
-        }
+    const GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fShader, std::size(fragmentShaderSource), fragmentShaderSource, fragmentShaderLengths);
+    glCompileShader(fShader);
+    glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fShader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
+        ELOG("glCompileShader() failed with fragment shader %s\nReported message:\n%s\n", shaderName,
+             infoLogBuffer)
+    }
 
-        const GLuint programHandle = glCreateProgram();
-        glAttachShader(programHandle, vShader);
-        glAttachShader(programHandle, fShader);
-        glLinkProgram(programHandle);
-        glGetProgramiv(programHandle, GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            glGetProgramInfoLog(programHandle, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-            ELOG("glLinkProgram() failed with program %s\nReported message:\n%s\n", shaderName, infoLogBuffer)
-        }
+    const GLuint programHandle = glCreateProgram();
+    glAttachShader(programHandle, vShader);
+    glAttachShader(programHandle, fShader);
+    glLinkProgram(programHandle);
+    glGetProgramiv(programHandle, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(programHandle, infoLogBufferSize, &infoLogSize, infoLogBuffer);
+        ELOG("glLinkProgram() failed with program %s\nReported message:\n%s\n", shaderName, infoLogBuffer)
+    }
 
-        glUseProgram(0);
+    glUseProgram(0);
 
-        glDetachShader(programHandle, vShader);
-        glDetachShader(programHandle, fShader);
-        glDeleteShader(vShader);
-        glDeleteShader(fShader);
+    glDetachShader(programHandle, vShader);
+    glDetachShader(programHandle, fShader);
+    glDeleteShader(vShader);
+    glDeleteShader(fShader);
 
-        return programHandle;
+    return programHandle;
+}
+
+GLuint ShaderSupport::CreateProgramFromSource(const std::string& shaderSourceVert, const std::string& shaderSourceFrag, const char* shaderName)
+{
+    GLchar infoLogBuffer[1024] = {};
+    GLsizei infoLogBufferSize = sizeof(infoLogBuffer);
+    GLsizei infoLogSize;
+    GLint success;
+    const char* vShaderSource = shaderSourceVert.c_str();
+    const char* fShaderSource = shaderSourceFrag.c_str();
+    
+    const GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vShader, 1, &vShaderSource, NULL);
+    glCompileShader(vShader);
+    glGetShaderiv(vShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vShader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
+        ELOG("glCompileShader() failed with vertex shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer)
+    }
+
+    const GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fShader, 1, &fShaderSource, NULL);
+    glCompileShader(fShader);
+    glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fShader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
+        ELOG("glCompileShader() failed with fragment shader %s\nReported message:\n%s\n", shaderName,
+             infoLogBuffer)
+    }
+
+    const GLuint programHandle = glCreateProgram();
+    glAttachShader(programHandle, vShader);
+    glAttachShader(programHandle, fShader);
+    glLinkProgram(programHandle);
+    glGetProgramiv(programHandle, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(programHandle, infoLogBufferSize, &infoLogSize, infoLogBuffer);
+        ELOG("glLinkProgram() failed with program %s\nReported message:\n%s\n", shaderName, infoLogBuffer)
+    }
+
+    glUseProgram(0);
+
+    glDetachShader(programHandle, vShader);
+    glDetachShader(programHandle, fShader);
+    glDeleteShader(vShader);
+    glDeleteShader(fShader);
+
+    return programHandle;
 }
 
 inline u32 ShaderSupport::LoadProgram(App* app, const char* filepath, const char* programName)
 {
     const String programSource = ReadTextFile(filepath);
     Program program = {};
-    program.handle = CreateProgramFromSource(programSource, programName);
-    program.filepath = filepath;
+    program.handle = CreateProgramFromSource(programSource.str, programName);
+    program.filepaths.emplace_back(filepath);
     program.programName = programName;
     program.lastWriteTimestamp = GetFileLastWriteTimestamp(filepath);
+    app->programs.push_back(program);
+
+    return app->programs.size() - 1;
+}
+
+u32 ShaderSupport::LoadProgram(App* app, const char* filepathVert, const char* filepathFrag, const char* programName)
+{
+    const String programSourceVert = ReadTextFile(filepathVert);
+    const String programSourceFrag = ReadTextFile(filepathFrag);
+    Program program = {};
+    program.handle = CreateProgramFromSource(programSourceVert.str, programSourceFrag.str, programName);
+    program.filepaths.emplace_back(filepathVert);
+    program.filepaths.emplace_back(filepathFrag);
+    program.programName = programName;
+    program.lastWriteTimestamp = GetFileLastWriteTimestamp(filepathVert);
     app->programs.push_back(program);
 
     return app->programs.size() - 1;

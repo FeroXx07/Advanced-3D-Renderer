@@ -58,7 +58,11 @@
     <None Include="WorkingDir\shaders.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="WorkingDir\shaded_model.glsl" />
+    <Content Include="WorkingDir\shaded.frag" />
+    <Content Include="WorkingDir\shaded.glsl" />
+    <Content Include="WorkingDir\shaded.vert" />
+    <Content Include="WorkingDir\shaders.frag" />
+    <Content Include="WorkingDir\shaders.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

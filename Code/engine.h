@@ -25,8 +25,11 @@ struct TextureSupport
 
 struct ShaderSupport
 {
-    static GLuint CreateProgramFromSource(String programSource, const char* shaderName);
+    static GLuint CreateProgramFromSource(std::string programSource, const char* shaderName);
+    static GLuint CreateProgramFromSource(const std::string& shaderSourceVert, const std::string& shaderSourceFrag, const char* shaderName);
     static u32 LoadProgram(App* app, const char* filepath, const char* programName);
+    static u32 LoadProgram(App* app, const char* filepathVert, const char* filepathFrag, const char* programName);
+
 };
 
 struct VAOSupport

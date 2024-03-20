@@ -6,7 +6,7 @@
 struct Program
 {
     GLuint             handle;
-    std::string        filepath;
+    std::vector<std::string>    filepaths;
     std::string        programName;
     u64                lastWriteTimestamp; // What is this for?
     VertexShaderLayout  vertexInputLayout;

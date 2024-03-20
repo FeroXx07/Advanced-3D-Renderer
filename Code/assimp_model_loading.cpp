@@ -95,7 +95,7 @@ u32 AssimpSupport::LoadModel(App* app, const char* filename)
 }
 
 void AssimpSupport::ProcessAssimpNode(const aiScene* scene, const aiNode* node, Mesh* myMesh, u32 baseMeshMaterialIndex,
-    std::vector<u32>& submeshMaterialIndices)
+                                      std::vector<u32>& submeshMaterialIndices)
 {
     // process all the node's meshes (if any)
     for(unsigned int i = 0; i < node->mNumMeshes; i++)
@@ -170,7 +170,7 @@ void AssimpSupport::ProcessAssimpMaterial(App* app, const aiMaterial* material, 
 }
 
 void AssimpSupport::ProcessAssimpMesh(const aiScene* scene, aiMesh* mesh, Mesh* myMesh, u32 baseMeshMaterialIndex,
-    std::vector<u32>& submeshMaterialIndices)
+                                      std::vector<u32>& submeshMaterialIndices)
 {
     std::vector<float> vertices;
     std::vector<u32> indices;
@@ -214,44 +214,43 @@ void AssimpSupport::ProcessAssimpMesh(const aiScene* scene, aiMesh* mesh, Mesh* 
             vertices.push_back(-mesh->mBitangents[i].y);
             vertices.push_back(-mesh->mBitangents[i].z);
         }
-
-        // process indices
-        for(unsigned int i = 0; i < mesh->mNumFaces; i++)
-        {
-            const aiFace face = mesh->mFaces[i];
-            for(unsigned int j = 0; j < face.mNumIndices; j++)
-            {
-                indices.push_back(face.mIndices[j]);
-            }
-        }
-
-        // store the proper (previously processed) material for this mesh
-        submeshMaterialIndices.push_back(baseMeshMaterialIndex + mesh->mMaterialIndex); // Base + offset
-
-        // create the vertex format
-        VertexBufferLayout vertexBufferLayout = {};
-        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 0, 3, 0 } );
-        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 1, 3, 3*sizeof(float) } );
-        vertexBufferLayout.stride = 6 * sizeof(float);
-        if (hasTexCoords)
-        {
-            vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 2, 2, vertexBufferLayout.stride } );
-            vertexBufferLayout.stride += 2 * sizeof(float);
-        }
-        if (hasTangentSpace)
-        {
-            vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 3, 3, vertexBufferLayout.stride } );
-            vertexBufferLayout.stride += 3 * sizeof(float);
-
-            vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 4, 3, vertexBufferLayout.stride } );
-            vertexBufferLayout.stride += 3 * sizeof(float);
-        }
-
-        // Add the subMesh into the mesh
-        SubMesh subMesh = {};
-        subMesh.vertexBufferLayout = vertexBufferLayout;
-        subMesh.vertices.swap(vertices);
-        subMesh.indices.swap(indices);
-        myMesh->subMeshes.push_back( subMesh );
     }
+    // process indices
+    for(unsigned int i = 0; i < mesh->mNumFaces; i++)
+    {
+        const aiFace face = mesh->mFaces[i];
+        for(unsigned int j = 0; j < face.mNumIndices; j++)
+        {
+            indices.push_back(face.mIndices[j]);
+        }
+    }
+
+    // store the proper (previously processed) material for this mesh
+    submeshMaterialIndices.push_back(baseMeshMaterialIndex + mesh->mMaterialIndex); // Base + offset
+
+    // create the vertex format
+    VertexBufferLayout vertexBufferLayout = {};
+    vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 0, 3, 0 } );
+    vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 1, 3, 3*sizeof(float) } );
+    vertexBufferLayout.stride = 6 * sizeof(float);
+    if (hasTexCoords)
+    {
+        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 2, 2, vertexBufferLayout.stride } );
+        vertexBufferLayout.stride += 2 * sizeof(float);
+    }
+    if (hasTangentSpace)
+    {
+        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 3, 3, vertexBufferLayout.stride } );
+        vertexBufferLayout.stride += 3 * sizeof(float);
+
+        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 4, 3, vertexBufferLayout.stride } );
+        vertexBufferLayout.stride += 3 * sizeof(float);
+    }
+
+    // Add the subMesh into the mesh
+    SubMesh subMesh = {};
+    subMesh.vertexBufferLayout = vertexBufferLayout;
+    subMesh.vertices.swap(vertices);
+    subMesh.indices.swap(indices);
+    myMesh->subMeshes.push_back( subMesh );
 }
