@@ -2,7 +2,7 @@
 
 layout(location = 0) in vec3 aPosition; // www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)
 layout(location = 1) in vec3 aNormal;
-layout(location = 1) in vec2 aTextCoord;
+layout(location = 2) in vec2 aTextCoord;
 layout(location = 3) in vec3 aTangent;
 layout(location = 4) in vec3 aBitangent;
 
