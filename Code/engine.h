@@ -8,7 +8,7 @@
 
 void Init(App* app);
 
-void Gui(const App* app);
+void Gui(App* app);
 
 void Update(App* app);
 

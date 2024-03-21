@@ -24,12 +24,17 @@ u32 AssimpSupport::LoadModel(App* app, const char* filename)
     }
 
     // Create & save mesh
-    app->meshes.emplace_back();
+    const char* name = scene->mRootNode->mName.C_Str();
+    std::string modelName = "Model_";
+    std::string meshName = "Mesh_";
+    modelName += name;
+    meshName += name;
+    app->meshes.emplace_back(meshName.c_str());
     Mesh& mesh = app->meshes.back();
     const u32 meshIdx = (u32)app->meshes.size() - 1u;
 
     // Create & save model, cache mesh idx
-    app->models.emplace_back();
+    app->models.emplace_back(modelName.c_str());
     Model& model = app->models.back();
     model.meshIdx = meshIdx;
     const u32 modelIdx = (u32)app->models.size() - 1u;
@@ -248,7 +253,7 @@ void AssimpSupport::ProcessAssimpMesh(const aiScene* scene, aiMesh* mesh, Mesh* 
     }
 
     // Add the subMesh into the mesh
-    SubMesh subMesh = {};
+    SubMesh subMesh = {mesh->mName.C_Str()};
     subMesh.vertexBufferLayout = vertexBufferLayout;
     subMesh.vertices.swap(vertices);
     subMesh.indices.swap(indices);

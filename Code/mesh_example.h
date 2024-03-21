@@ -4,7 +4,7 @@
 #include "mesh.h"
 #include "vertex.h"
 
-void mesh_example(App* app)
+inline void SampleMesh(App* app)
 {
      /* TODO: Initialize your resources here! */
     // - vertex buffers
@@ -22,9 +22,15 @@ void mesh_example(App* app)
         0, 1, 2,
         0, 2, 3
     };
-    Model model = {};
-    Mesh mesh = {};
-
+    Model model = {"MyPlaneModel"};
+    Mesh mesh = {"MyPlaneMesh"};
+    
+    app->materials.emplace_back();
+    Material& material = app->materials.back();
+    material.name = "MyPlane_Dice_Mat";
+    material.albedo = glm::vec3(255);
+    material.albedoTextureIdx = app->diceTexIdx;
+    model.materialIdx.push_back(app->materials.size() - 1);
     // Geometry (vertex buffer object & element buffer object, gpu side)
     glGenBuffers(1, &mesh.vertexBufferHandle);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferHandle);
@@ -51,10 +57,10 @@ void mesh_example(App* app)
     */
     VertexBufferLayout vertexBufferLayout = {};
     vertexBufferLayout.attributes.push_back(VertexBufferAttribute{0, 3, 0}); // 3D positions
-    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{1, 2, sizeof(glm::vec3)}); // 2D tex coords
+    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{2, 2, sizeof(glm::vec3)}); // 2D tex coords
     vertexBufferLayout.stride = sizeof(VertexV3V2);
     
-    SubMesh subMesh = {};
+    SubMesh subMesh = {"MyPlaneSubMesh"};
     subMesh.vertexBufferLayout = vertexBufferLayout;
 
     const u32 verticesSize = std::size(vertices);

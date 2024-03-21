@@ -13,6 +13,7 @@
 #include <stb_image.h>
 
 #include "assimp_model_loading.h"
+#include "mesh_example.h"
 #include "program.h"
 #include "texture.h"
 #include "vertex.h"
@@ -21,7 +22,13 @@ void Init(App* app)
 {
     app->ctx = RetrieveOpenGLContext();
     
-   
+    app->diceTexIdx = TextureSupport::LoadTexture2D(app, "dice.png");
+    app->whiteTexIdx = TextureSupport::LoadTexture2D(app, "color_white.png");
+    app->blackTexIdx = TextureSupport::LoadTexture2D(app, "color_black.png");
+    app->normalTexIdx = TextureSupport::LoadTexture2D(app, "color_normal.png");
+    app->magentaTexIdx = TextureSupport::LoadTexture2D(app, "color_magenta.png");
+    
+    SampleMesh(app);
     
     // - programs (and retrieve uniform indices)
     //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
@@ -49,26 +56,17 @@ void Init(App* app)
         program.vertexInputLayout.attributes.push_back({static_cast<u8>(attributeLocation), static_cast<u8>(attributeSize)});
     }
     
-    app->texturedMeshProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
-    
-    // - textures
-    app->diceTexIdx = TextureSupport::LoadTexture2D(app, "dice.png");
-    app->whiteTexIdx = TextureSupport::LoadTexture2D(app, "color_white.png");
-    app->blackTexIdx = TextureSupport::LoadTexture2D(app, "color_black.png");
-    app->normalTexIdx = TextureSupport::LoadTexture2D(app, "color_normal.png");
-    app->magentaTexIdx = TextureSupport::LoadTexture2D(app, "color_magenta.png");
-
+    app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
     app->mode = Mode_TexturedQuad;
-
     app->model = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
 }
 
-void Gui(const App* app)
+void Gui(App* app)
 {
-    bool showDemoWindow = false;
-    ImGui::ShowDemoWindow(&showDemoWindow);
+    ImGui::ShowDemoWindow(&app->showDemoWindow);
+    ImGui::Begin("Debug");
     
-    ImGui::Begin("Info");
+    ImGui::Checkbox("#Show Demo Window", &app->showDemoWindow);
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS:");
     ImGui::SameLine();
     ImGui::Text("%f", 1.0f/app->deltaTime);
@@ -84,6 +82,9 @@ void Gui(const App* app)
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "OpenGL GLSL version:");
     ImGui::SameLine();
     ImGui::Text("%s", app->ctx.glslVersion.c_str());
+    
+    ImGui::Checkbox("#Draw Wireframe", &app->drawWireFrame);
+
     ImGui::End();
 }
 
@@ -119,7 +120,7 @@ void Update(App* app)
 
 void Render(App* app)
 {
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Shaded Model");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
     
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -146,24 +147,40 @@ void Render(App* app)
             const Program& program = app->programs[app->texturedGeometryProgramIdx];
             glUseProgram(program.handle);
 
-            const Model& model = app->models[app->model];
-            Mesh& mesh = app->meshes[model.meshIdx];
-
-            const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
-            for (u32 i = 0; i < subMeshCount; i++)
+            const u32 modelsCount = static_cast<u32>(app->models.size());
+            for (u32 m = 0; m < modelsCount; ++m)
             {
-                const GLuint vao = VAOSupport::FindVAO(mesh, i, program);
-                glBindVertexArray(vao);
+                Model& model = app->models[m];
+                Mesh& mesh = app->meshes[model.meshIdx];
+                
+                glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, model.name.c_str());
 
-                const u32 subMeshMaterialIdx = model.materialIdx[i];
-                const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+                const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
+                for (u32 i = 0; i < subMeshCount; i++)
+                {
+                    SubMesh& subMesh = mesh.subMeshes[i];
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, app->textures[subMeshMaterial.albedoTextureIdx].handle);
-                glUniform1i(app->texturedMeshProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
+                    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, subMesh.name.c_str());
+                    const GLuint vao = VAOSupport::FindVAO(mesh, i, program);
+                
+                    if (app->drawWireFrame)
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    else
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                
+                    glBindVertexArray(vao);
 
-                SubMesh& subMesh = mesh.subMeshes[i];
-                glDrawElements(GL_TRIANGLES, static_cast<u32>(subMesh.indices.size()), GL_UNSIGNED_INT, (void*)static_cast<u64>(subMesh.indexOffset));
+                    const u32 subMeshMaterialIdx = model.materialIdx[i];
+                    const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, app->textures[subMeshMaterial.albedoTextureIdx].handle);
+                    glUniform1i(app->defaultShaderProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
+
+                    glDrawElements(GL_TRIANGLES, static_cast<u32>(subMesh.indices.size()), GL_UNSIGNED_INT, (void*)static_cast<u64>(subMesh.indexOffset));
+                    glPopDebugGroup();
+                }
+                glPopDebugGroup();
             }
         }
         break;

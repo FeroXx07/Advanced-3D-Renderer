@@ -25,7 +25,8 @@ struct App
     // Graphics
     OpenGlContext ctx;
     ivec2 displaySize;
-
+    bool drawWireFrame = false;
+    
     // Vectors
     std::vector<Texture>  textures;
     std::vector<Program>  programs;
@@ -53,7 +54,9 @@ struct App
     // a screen filling quad, a cube, a sphere...)
 
     // Location of the texture uniform in the textured quad shader
-    GLuint texturedMeshProgram_uTexture;
+    GLuint defaultShaderProgram_uTexture;
+
+    bool showDemoWindow = false;
 };
 
 #endif // APP_H
