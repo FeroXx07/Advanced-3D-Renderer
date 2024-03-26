@@ -65,13 +65,13 @@ u32 AssimpSupport::LoadModel(App* app, const char* filename)
         vertexBufferSize += mesh.subMeshes[i].vertices.size() * sizeof(float);
         indexBufferSize  += mesh.subMeshes[i].indices.size()  * sizeof(u32);
     }
-
-    glGenBuffers(1, &mesh.vertexBufferHandle);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferHandle);
+    
+    mesh.vertexBuffer = CREATE_STATIC_VERTEX_BUFFER(sizeof(vertexBufferSize), nullptr);
+    BufferManagement::BindBuffer(mesh.vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, NULL, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &mesh.indexBufferHandle);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBufferHandle);
+    mesh.indexBuffer = CREATE_STATIC_INDEX_BUFFER(sizeof(indexBufferSize), nullptr);
+    BufferManagement::BindBuffer(mesh.indexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, NULL, GL_STATIC_DRAW);
 
     u32 indicesOffset = 0;
@@ -93,8 +93,8 @@ u32 AssimpSupport::LoadModel(App* app, const char* filename)
         indicesOffset += indicesSize;
     }
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    BufferManagement::UnBindBuffer(mesh.indexBuffer);
+    BufferManagement::UnBindBuffer(mesh.vertexBuffer);
 
     return modelIdx;
 }

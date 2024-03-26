@@ -14,6 +14,12 @@ void Update(App* app);
 
 void Render(App* app);
 
+void CheckShadersHotReload(App* app);
+
+void CreateEntity(App* app, const glm::mat4& worldMatrix, const u32 modelIndex, const char* name);
+
+void PushTransformDataToShader(App* app);
+
 struct VAOSupport
 {
     static void CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle);

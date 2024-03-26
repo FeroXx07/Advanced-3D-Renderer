@@ -11,6 +11,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <stb_image.h>
+#include <GLFW/glfw3.h>
 
 #include "assimp_model_loading.h"
 #include "mesh_example.h"
@@ -20,21 +21,28 @@
 
 void Init(App* app)
 {
+    // OpenGL inits
     app->ctx = RetrieveOpenGLContext();
+    constexpr glm::mat4 identityMat = glm::identity<glm::mat4>();
+    BufferManagement::InitUniformBuffer();
+    app->uniformBuffer = CREATE_CONSTANT_BUFFER(BufferManagement::maxUniformBufferSize, nullptr);
+    BufferManagement::BindBufferToBindingPoint(app->uniformBuffer, 1, sizeof(glm::mat4) * 2, 0);
     
+    // Camera & View init
+    app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
+    
+    // Default Texture loading
     app->diceTexIdx = TextureSupport::LoadTexture2D(app, "dice.png");
     app->whiteTexIdx = TextureSupport::LoadTexture2D(app, "color_white.png");
     app->blackTexIdx = TextureSupport::LoadTexture2D(app, "color_black.png");
     app->normalTexIdx = TextureSupport::LoadTexture2D(app, "color_normal.png");
     app->magentaTexIdx = TextureSupport::LoadTexture2D(app, "color_magenta.png");
     
-    SampleMesh(app);
-    
     // - programs (and retrieve uniform indices)
     //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
     //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.vert", "shaders.frag", "TEXTURED_GEOMETRY");
-    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaded.vert", "shaded.frag", "SHADED");
-    app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaded.glsl", "SHADED_MODEL");
+    app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "bufferedShader.vert", "bufferedShader.frag", "BUFFERED_SHADER");
+    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaded.glsl", "SHADED_MODEL");
 
     // Fill vertex shader layout auto
     Program& program = app->programs[app->texturedGeometryProgramIdx];
@@ -58,15 +66,26 @@ void Init(App* app)
     
     app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
     app->mode = Mode_TexturedQuad;
-    app->model = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
+
+    const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
+    const u32 sampleMeshModelIdx = CreateSampleMesh(app);
+
+    CreateEntity(app, identityMat, sampleMeshModelIdx, "SampleModel");
+    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.5)), patrickModelIdx, "PatrickModel");
+
+    PushTransformDataToShader(app);
 }
 
 void Gui(App* app)
 {
-    ImGui::ShowDemoWindow(&app->showDemoWindow);
-    ImGui::Begin("Debug");
+    if (app->showDemoWindow)
+        ImGui::ShowDemoWindow(&app->showDemoWindow);
     
+    ImGui::Begin("Debug");
     ImGui::Checkbox("#Show Demo Window", &app->showDemoWindow);
+    ImGui::Checkbox("#Draw Wireframe", &app->drawWireFrame);
+    ImGui::Separator();
+    ImGui::Text("OpenGL Context");
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS:");
     ImGui::SameLine();
     ImGui::Text("%f", 1.0f/app->deltaTime);
@@ -82,40 +101,34 @@ void Gui(App* app)
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "OpenGL GLSL version:");
     ImGui::SameLine();
     ImGui::Text("%s", app->ctx.glslVersion.c_str());
-    
-    ImGui::Checkbox("#Draw Wireframe", &app->drawWireFrame);
-
+    ImGui::Separator();
+    ImGui::Text("Camera");
+    ImGui::InputFloat3("Position", &app->camera.position[0]);
+    if(ImGui::InputFloat3("Pitch/Yaw/Roll", &app->camera.angles[0]))
+        app->camera.UpdateCameraVectors();
     ImGui::End();
 }
 
 void Update(App* app)
 {
-    // You can handle app->input keyboard/mouse here
-    for (u64 i = 0; i < app->programs.size(); ++i)
-    {
-        Program& program = app->programs[i];
-        for (u64 j = 0; j < program.filePaths.size(); ++j)
-        {
-            const u64 currentTimeStamp = GetFileLastWriteTimestamp(program.filePaths[j].c_str());
-            if (currentTimeStamp > program.lastWriteTimestamp)
-            {
-                glDeleteProgram(program.handle);
-                const char* programName = program.programName.c_str();
-                if (program.filePaths.size() > 1)
-                {
-                    const String programSourceVert = ReadTextFile(program.filePaths[0].c_str());
-                    const String programSourceFrag = ReadTextFile(program.filePaths[1].c_str());
-                    program.handle = ShaderSupport::CreateProgramFromSource(programSourceVert.str, programSourceFrag.str, programName);
-                }
-                else
-                {
-                    const String programSource = ReadTextFile(program.filePaths[j].c_str());
-                    program.handle = ShaderSupport::CreateProgramFromSource(programSource.str, programName);
-                }
-                program.lastWriteTimestamp = currentTimeStamp;
-            }
-        }
-    }
+    Camera& camera = app->camera;
+    
+    if (app->input.keys[K_W] == BUTTON_PRESS)
+        camera.ProcessKeyboard(Camera_Movement::FORWARD, app->deltaTime);
+    if (app->input.keys[K_S] == BUTTON_PRESS)
+        camera.ProcessKeyboard(Camera_Movement::BACKWARD, app->deltaTime);
+    if (app->input.keys[K_A] == BUTTON_PRESS)
+        camera.ProcessKeyboard(Camera_Movement::LEFT, app->deltaTime);
+    if (app->input.keys[K_D] == BUTTON_PRESS)
+        camera.ProcessKeyboard(Camera_Movement::RIGHT, app->deltaTime);
+
+    //camera.ProcessMouseMovement(app->input.mousePos.x, app->input.mousePos.y);
+    
+    app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
+    
+    CheckShadersHotReload(app);
+
+    PushTransformDataToShader(app);
 }
 
 void Render(App* app)
@@ -146,11 +159,12 @@ void Render(App* app)
 
             const Program& program = app->programs[app->texturedGeometryProgramIdx];
             glUseProgram(program.handle);
-
-            const u32 modelsCount = static_cast<u32>(app->models.size());
-            for (u32 m = 0; m < modelsCount; ++m)
+        
+            const u32 entityCount = static_cast<u32>(app->entities.size());
+            for (u32 e = 0; e < entityCount; ++e)
             {
-                Model& model = app->models[m];
+                const Entity& entity = app->entities[e];
+                Model& model = app->models[entity.modelIndex];
                 Mesh& mesh = app->meshes[model.meshIdx];
                 
                 glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, model.name.c_str());
@@ -189,15 +203,71 @@ void Render(App* app)
     }
     glPopDebugGroup();
 }
+void CheckShadersHotReload(App* app)
+{
+    for (u64 i = 0; i < app->programs.size(); ++i)
+    {
+        Program& program = app->programs[i];
+        for (u64 j = 0; j < program.filePaths.size(); ++j)
+        {
+            const u64 currentTimeStamp = GetFileLastWriteTimestamp(program.filePaths[j].c_str());
+            if (currentTimeStamp > program.lastWriteTimestamp)
+            {
+                glDeleteProgram(program.handle);
+                const char* programName = program.programName.c_str();
+                if (program.filePaths.size() > 1)
+                {
+                    const String programSourceVert = ReadTextFile(program.filePaths[0].c_str());
+                    const String programSourceFrag = ReadTextFile(program.filePaths[1].c_str());
+                    program.handle = ShaderSupport::CreateProgramFromSource(programSourceVert.str, programSourceFrag.str, programName);
+                }
+                else
+                {
+                    const String programSource = ReadTextFile(program.filePaths[j].c_str());
+                    program.handle = ShaderSupport::CreateProgramFromSource(programSource.str, programName);
+                }
+                program.lastWriteTimestamp = currentTimeStamp;
+            }
+        }
+    }
+}
+void CreateEntity(App* app, const glm::mat4& worldMatrix, const u32 modelIndex, const char* name)
+{
+    Entity entity = {};
+    entity.name = name;
+    entity.worldMatrix = worldMatrix;
+    entity.modelIndex = modelIndex;
+
+    app->entities.emplace_back(entity);
+}
+void PushTransformDataToShader(App* app)
+{
+    Buffer& uniformBuffer = app->uniformBuffer;
+    BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
+
+    std::vector<Entity>& entities = app->entities;
+    const u64 entityCount = app->entities.size();
+    for (u32 i = 0; i < entityCount; ++i)
+    {
+        Entity& entity = entities[i];
+        PUSH_MAT4(uniformBuffer, entity.worldMatrix, sizeof(glm::mat4));
+        entity.worldViewProjectionMat = app->projectionMat * app->camera.GetViewMatrix() * entity.worldMatrix;
+        PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat, sizeof(glm::mat4));
+    }
+    
+    BufferManagement::UnmapBuffer(uniformBuffer);
+}
 
 void VAOSupport::CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle)
 {
-    std::cout << "Creating new VAO" << "\n" << "\n";
+    std::cout << "Creating new VAO for Mesh: " << mesh.name << " SubMesh: " << subMesh.name << " With program " << program.programName << "\n" << "\n";
     glGenVertexArrays(1, &vaoHandle);
     glBindVertexArray(vaoHandle);
-
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferHandle);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBufferHandle);
+    BufferManagement::BindBuffer(mesh.vertexBuffer);
+    BufferManagement::BindBuffer(mesh.indexBuffer);
+    
+    //glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBuffer);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
 
     // We have to link all vertex inputs attributes to attributes in the vertex buffer
     const u32 programAttributesCount = (u32)program.vertexInputLayout.attributes.size();

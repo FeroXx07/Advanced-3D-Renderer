@@ -3,6 +3,8 @@
 #include "platform.h"
 #include <vector>
 
+#include "camera.h"
+#include "entity.h"
 #include "mesh.h"
 #include "program.h"
 #include "texture.h"
@@ -26,6 +28,10 @@ struct App
     OpenGlContext ctx;
     ivec2 displaySize;
     bool drawWireFrame = false;
+
+    // Camera
+    Camera camera;
+    glm::mat4 projectionMat;
     
     // Vectors
     std::vector<Texture>  textures;
@@ -33,9 +39,6 @@ struct App
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
     std::vector<Model> models;
-
-    // Model
-    u32 model = 0;
     
     // program indices
     u32 texturedGeometryProgramIdx;
@@ -50,12 +53,18 @@ struct App
     // Mode
     Mode mode;
 
+    // Buffers
+    Buffer uniformBuffer;
+    
     // Embedded geometry (in-editor simple meshes such as
     // a screen filling quad, a cube, a sphere...)
 
     // Location of the texture uniform in the textured quad shader
     GLuint defaultShaderProgram_uTexture;
 
+    // Entities
+    std::vector<Entity> entities;
+    
     bool showDemoWindow = false;
 };
 

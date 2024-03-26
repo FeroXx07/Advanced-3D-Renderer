@@ -11,6 +11,7 @@
 struct VertexV3V2
 {
     glm::vec3 pos;
+    glm::vec3 normal;
     glm::vec2 uv;
 
     std::vector<float> GetVector() const

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Code\assimp_model_loading.cpp" />
+    <ClCompile Include="Code\buffer_managment.cpp" />
     <ClCompile Include="Code\engine.cpp" />
     <ClCompile Include="Code\platform.cpp" />
     <ClCompile Include="Code\program.cpp" />
@@ -37,7 +38,10 @@
   <ItemGroup>
     <ClInclude Include="Code\app.h" />
     <ClInclude Include="Code\assimp_model_loading.h" />
+    <ClInclude Include="Code\buffer_management.h" />
+    <ClInclude Include="Code\camera.h" />
     <ClInclude Include="Code\engine.h" />
+    <ClInclude Include="Code\entity.h" />
     <ClInclude Include="Code\errors_support.h" />
     <ClInclude Include="Code\mesh.h" />
     <ClInclude Include="Code\mesh_example.h" />

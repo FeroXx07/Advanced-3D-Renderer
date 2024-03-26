@@ -3,6 +3,8 @@
 #include "vertex.h"
 #include <vector>
 
+#include "buffer_management.h"
+
 struct Model
 {
     Model(const char* name) : name(name), meshIdx(0)
@@ -32,14 +34,14 @@ struct SubMesh
 
 struct Mesh
 {
-    Mesh(const char* name) : name(name), vertexBufferHandle(0), indexBufferHandle(0)
+    Mesh(const char* name) : name(name)
     {
     }
 
     std::string name;
     std::vector<SubMesh> subMeshes;
-    GLuint vertexBufferHandle;
-    GLuint indexBufferHandle;
+    Buffer vertexBuffer;
+    Buffer indexBuffer;
 };
 
 struct Material
