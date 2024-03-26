@@ -69,8 +69,10 @@ void Init(App* app)
     const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
 
-    CreateEntity(app, identityMat, sampleMeshModelIdx, "SampleModel");
-    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.3)), patrickModelIdx, "PatrickModel");
+    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, -1.0f, 0.0f)), sampleMeshModelIdx, "SampleModel");
+    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.3f)), patrickModelIdx, "PatrickModel");
+    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel2");
+    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(-2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel3");
 
     PushTransformDataToShader(app);
 }
@@ -132,15 +134,11 @@ void EntityTransformGUI(App* app) {
     glm::vec3 eulerAnglesOrientation = glm::degrees(glm::eulerAngles(orientation));
 
     // Modify values
-    bool changed = false;
-    if (ImGui::InputFloat3("Translation", &translation[0]))
-        changed = true;
-    else if ( ImGui::InputFloat3("Orientation", &eulerAnglesOrientation[0]))
-        changed = true;
-    else if (ImGui::InputFloat3("Scale", &scale[0]))
-        changed = true;
+    bool valueChanged = false;
+    if (ImGui::InputFloat3("Translation", &translation[0]) || ImGui::InputFloat3("Orientation", &eulerAnglesOrientation[0]) || ImGui::InputFloat3("Scale", &scale[0]))
+        valueChanged = true;
 
-    if (changed)
+    if (valueChanged)
     {
         // Compose model matrix
         orientation = glm::quat(glm::radians(eulerAnglesOrientation));
