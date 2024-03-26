@@ -113,13 +113,13 @@ void Update(App* app)
 {
     Camera& camera = app->camera;
     
-    if (app->input.keys[K_W] == BUTTON_PRESS)
+    if (app->input.keys[K_W] == BUTTON_PRESSED)
         camera.ProcessKeyboard(Camera_Movement::FORWARD, app->deltaTime);
-    if (app->input.keys[K_S] == BUTTON_PRESS)
+    if (app->input.keys[K_S] == BUTTON_PRESSED)
         camera.ProcessKeyboard(Camera_Movement::BACKWARD, app->deltaTime);
-    if (app->input.keys[K_A] == BUTTON_PRESS)
+    if (app->input.keys[K_A] == BUTTON_PRESSED)
         camera.ProcessKeyboard(Camera_Movement::LEFT, app->deltaTime);
-    if (app->input.keys[K_D] == BUTTON_PRESS)
+    if (app->input.keys[K_D] == BUTTON_PRESSED)
         camera.ProcessKeyboard(Camera_Movement::RIGHT, app->deltaTime);
 
     //camera.ProcessMouseMovement(app->input.mousePos.x, app->input.mousePos.y);
@@ -134,10 +134,11 @@ void Update(App* app)
 void Render(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
+    glEnable(GL_DEPTH_TEST);
     
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
     glEnable(GL_BLEND);
@@ -250,9 +251,9 @@ void PushTransformDataToShader(App* app)
     for (u32 i = 0; i < entityCount; ++i)
     {
         Entity& entity = entities[i];
-        PUSH_MAT4(uniformBuffer, entity.worldMatrix, sizeof(glm::mat4));
+        PUSH_MAT4(uniformBuffer, entity.worldMatrix);
         entity.worldViewProjectionMat = app->projectionMat * app->camera.GetViewMatrix() * entity.worldMatrix;
-        PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat, sizeof(glm::mat4));
+        PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
     }
     
     BufferManagement::UnmapBuffer(uniformBuffer);

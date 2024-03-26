@@ -73,6 +73,7 @@ void OnGlfwScrollEvent(GLFWwindow* window, double xoffset, double yoffset)
 
 void OnGlfwKeyboardEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+    //std::cout << "Key: " << key << ", Scancode: " << scancode << ", Action: " << action << "\n";
     // Remap key to our enum values
     switch (key) {
         case GLFW_KEY_SPACE:  key = K_SPACE; break;
@@ -91,12 +92,15 @@ void OnGlfwKeyboardEvent(GLFWwindow* window, int key, int scancode, int action, 
         case GLFW_KEY_Y: key = K_Y; break; case GLFW_KEY_Z: key = K_Z; break;
         case GLFW_KEY_ESCAPE: key = K_ESCAPE; break;
         case GLFW_KEY_ENTER:  key = K_ENTER; break;
+    default: ;
     }
 
     App* app = (App*)glfwGetWindowUserPointer(window);
     switch (action) {
         case GLFW_PRESS:   app->input.keys[key] = BUTTON_PRESS; break;
+        case GLFW_REPEAT:   app->input.keys[key] = BUTTON_PRESSED; break;
         case GLFW_RELEASE: app->input.keys[key] = BUTTON_RELEASE; break;
+    default: ;
     }
 }
 
