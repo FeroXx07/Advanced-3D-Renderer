@@ -34,7 +34,7 @@ public:
     static void PushAlignedData(Buffer& buffer, const void* data, u32 size, u32 alignment);
     static void InitUniformBuffer();
 
-    static void BindBufferToBindingPoint(const Buffer& buffer, const u32 bindingPoint, const u32 blockSize, const u32 blockOffset);
+    static void BindBufferRange(const Buffer& buffer, const u32 bindingPoint, const u32 blockSize, const u32 blockOffset);
     
     static GLint maxUniformBufferSize;
     static GLint uniformBlockAlignment;

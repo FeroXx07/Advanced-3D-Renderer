@@ -70,7 +70,7 @@ void BufferManagement::InitUniformBuffer()
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniformBlockAlignment);
 }
-void BufferManagement::BindBufferToBindingPoint(const Buffer& buffer, const u32 bindingPoint = 0, const u32 blockSize = 0, const u32 blockOffset = 0)
+void BufferManagement::BindBufferRange(const Buffer& buffer, const u32 bindingPoint = 0, const u32 blockSize = 0, const u32 blockOffset = 0)
 {
     glBindBufferRange(GL_UNIFORM_BUFFER, bindingPoint, buffer.handle, blockOffset, blockSize);
 }

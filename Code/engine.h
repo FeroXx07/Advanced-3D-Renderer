@@ -26,4 +26,6 @@ struct VAOSupport
     static GLuint FindVAO(Mesh& mesh, const u32 subMeshIndex, const Program& program);
 };
 
+static i32 nodeClicked = 0;
+
 

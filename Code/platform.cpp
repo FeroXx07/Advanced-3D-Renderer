@@ -57,12 +57,21 @@ void OnGlfwMouseEvent(GLFWwindow* window, int button, int event, int modifiers)
             switch (button) {
                 case GLFW_MOUSE_BUTTON_RIGHT: app->input.mouseButtons[RIGHT] = BUTTON_PRESS; break;
                 case GLFW_MOUSE_BUTTON_LEFT:  app->input.mouseButtons[LEFT]  = BUTTON_PRESS; break;
+            default: ;
+            } break;
+        case GLFW_REPEAT:
+            switch (button) {
+            case GLFW_MOUSE_BUTTON_RIGHT: app->input.mouseButtons[RIGHT] = BUTTON_PRESSED; break;
+            case GLFW_MOUSE_BUTTON_LEFT:  app->input.mouseButtons[LEFT]  = BUTTON_PRESSED; break;
+            default: ;
             } break;
         case GLFW_RELEASE:
             switch (button) {
                 case GLFW_MOUSE_BUTTON_RIGHT: app->input.mouseButtons[RIGHT] = BUTTON_RELEASE; break;
                 case GLFW_MOUSE_BUTTON_LEFT:  app->input.mouseButtons[LEFT]  = BUTTON_RELEASE; break;
+            default: ;
             } break;
+        default: ;
     }
 }
 

@@ -10,8 +10,8 @@
 #include "engine.h"
 #include <imgui.h>
 #include <iostream>
-#include <stb_image.h>
-#include <GLFW/glfw3.h>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "assimp_model_loading.h"
 #include "mesh_example.h"
@@ -26,7 +26,6 @@ void Init(App* app)
     constexpr glm::mat4 identityMat = glm::identity<glm::mat4>();
     BufferManagement::InitUniformBuffer();
     app->uniformBuffer = CREATE_CONSTANT_BUFFER(BufferManagement::maxUniformBufferSize, nullptr);
-    BufferManagement::BindBufferToBindingPoint(app->uniformBuffer, 1, sizeof(glm::mat4) * 2, 0);
     
     // Camera & View init
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
@@ -71,17 +70,18 @@ void Init(App* app)
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
 
     CreateEntity(app, identityMat, sampleMeshModelIdx, "SampleModel");
-    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.5)), patrickModelIdx, "PatrickModel");
+    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.3)), patrickModelIdx, "PatrickModel");
 
     PushTransformDataToShader(app);
 }
 
-void Gui(App* app)
-{
-    if (app->showDemoWindow)
-        ImGui::ShowDemoWindow(&app->showDemoWindow);
-    
-    ImGui::Begin("Debug");
+void CameraGUI(App* app) {
+    ImGui::Text("Camera");
+    ImGui::InputFloat3("Position", &app->camera.position[0]);
+    if(ImGui::InputFloat3("Pitch/Yaw/Roll", &app->camera.angles[0]))
+        app->camera.UpdateCameraVectors();
+}
+void OpenGLContextGUI(App* app) {
     ImGui::Checkbox("#Show Demo Window", &app->showDemoWindow);
     ImGui::Checkbox("#Draw Wireframe", &app->drawWireFrame);
     ImGui::Separator();
@@ -101,11 +101,71 @@ void Gui(App* app)
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "OpenGL GLSL version:");
     ImGui::SameLine();
     ImGui::Text("%s", app->ctx.glslVersion.c_str());
+}
+void EntityHierarchyGUI(const App* app)
+{
+    if (ImGui::CollapsingHeader("Entity Hierarchy", ImGuiTreeNodeFlags_None))
+    {
+        const i64 entitiesCount = (i64)app->entities.size();
+        for (int i = 0; i < entitiesCount; i++)
+        {
+            // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
+            ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+            const bool isSelected = nodeClicked == i;
+            if (isSelected)
+                nodeFlags |= ImGuiTreeNodeFlags_Selected;
+            nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+            ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %d", app->entities[i].name.c_str(), i);
+            if (ImGui::IsItemClicked())
+                nodeClicked = i;
+        }
+    }
+}
+void EntityTransformGUI(App* app) {
+    ImGui::Text("Transform: %s", app->entities[nodeClicked].name.c_str());
+
+    // Decompose model matrix
+    glm::vec3 translation, scale, skew;
+    glm::vec4 perspective;
+    glm::quat orientation;
+    glm::decompose(app->entities[nodeClicked].worldMatrix, scale, orientation, translation, skew, perspective);
+    glm::vec3 eulerAnglesOrientation = glm::degrees(glm::eulerAngles(orientation));
+
+    // Modify values
+    bool changed = false;
+    if (ImGui::InputFloat3("Translation", &translation[0]))
+        changed = true;
+    else if ( ImGui::InputFloat3("Orientation", &eulerAnglesOrientation[0]))
+        changed = true;
+    else if (ImGui::InputFloat3("Scale", &scale[0]))
+        changed = true;
+
+    if (changed)
+    {
+        // Compose model matrix
+        orientation = glm::quat(glm::radians(eulerAnglesOrientation));
+        scale = glm::clamp(scale, glm::vec3(0.001f), glm::vec3(100.0f));
+        glm::mat4 composedModelMat = glm::mat4(1.0f);
+        composedModelMat = glm::translate(composedModelMat, translation);
+        composedModelMat *= glm::toMat4(orientation); // Combine rotation
+        composedModelMat = glm::scale(composedModelMat, scale);
+    
+        app->entities[nodeClicked].worldMatrix = composedModelMat;
+    }
+}
+void Gui(App* app)
+{
+    if (app->showDemoWindow)
+        ImGui::ShowDemoWindow(&app->showDemoWindow);
+    
+    ImGui::Begin("Debug");
+    OpenGLContextGUI(app);
     ImGui::Separator();
-    ImGui::Text("Camera");
-    ImGui::InputFloat3("Position", &app->camera.position[0]);
-    if(ImGui::InputFloat3("Pitch/Yaw/Roll", &app->camera.angles[0]))
-        app->camera.UpdateCameraVectors();
+    CameraGUI(app);
+    ImGui::Separator();
+    EntityTransformGUI(app);
+    ImGui::Separator();
+    EntityHierarchyGUI(app);
     ImGui::End();
 }
 
@@ -122,7 +182,8 @@ void Update(App* app)
     if (app->input.keys[K_D] == BUTTON_PRESSED)
         camera.ProcessKeyboard(Camera_Movement::RIGHT, app->deltaTime);
 
-    //camera.ProcessMouseMovement(app->input.mousePos.x, app->input.mousePos.y);
+    if (app->input.mouseButtons[MouseButton::RIGHT] == BUTTON_PRESSED)
+        camera.ProcessMouseMovement(app->input.mouseDelta.x, -app->input.mouseDelta.y);
     
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
     
@@ -165,6 +226,8 @@ void Render(App* app)
             for (u32 e = 0; e < entityCount; ++e)
             {
                 const Entity& entity = app->entities[e];
+                BufferManagement::BindBufferRange(app->uniformBuffer, 1, entity.localParamsSize, entity.localParamsOffset);
+
                 Model& model = app->models[entity.modelIndex];
                 Mesh& mesh = app->meshes[model.meshIdx];
                 
@@ -251,9 +314,14 @@ void PushTransformDataToShader(App* app)
     for (u32 i = 0; i < entityCount; ++i)
     {
         Entity& entity = entities[i];
+        BufferManagement::AlignHead(uniformBuffer, sizeof(vec4));
+        entity.localParamsOffset = uniformBuffer.head;
+        
         PUSH_MAT4(uniformBuffer, entity.worldMatrix);
         entity.worldViewProjectionMat = app->projectionMat * app->camera.GetViewMatrix() * entity.worldMatrix;
         PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
+
+        entity.localParamsSize = uniformBuffer.head - entity.localParamsOffset;
     }
     
     BufferManagement::UnmapBuffer(uniformBuffer);
