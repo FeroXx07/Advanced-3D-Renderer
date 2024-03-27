@@ -6,9 +6,11 @@ struct Entity
 {
     std::string name;
 
+    glm::vec4 color;
     glm::mat4 worldMatrix;
     glm::mat4 worldViewProjectionMat;
     u32 modelIndex;
+    u32 programIndex;
     u32 localParamsOffset;
     u32 localParamsSize;
 };

@@ -43,6 +43,7 @@
     <ClInclude Include="Code\engine.h" />
     <ClInclude Include="Code\entity.h" />
     <ClInclude Include="Code\errors_support.h" />
+    <ClInclude Include="Code\light.h" />
     <ClInclude Include="Code\mesh.h" />
     <ClInclude Include="Code\mesh_example.h" />
     <ClInclude Include="Code\platform.h" />

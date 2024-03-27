@@ -5,6 +5,7 @@
 
 #include "camera.h"
 #include "entity.h"
+#include "light.h"
 #include "mesh.h"
 #include "program.h"
 #include "texture.h"
@@ -39,31 +40,25 @@ struct App
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
     std::vector<Model> models;
-    
-    // program indices
-    u32 texturedGeometryProgramIdx;
+    std::vector<Entity> entities;
+    std::vector<Light> lights;
     
     // texture indices
     u32 diceTexIdx;
-    u32 whiteTexIdx;
-    u32 blackTexIdx;
-    u32 normalTexIdx;
-    u32 magentaTexIdx;
 
     // Mode
     Mode mode;
 
     // Buffers
     Buffer uniformBuffer;
+    u32 globalParamsOffset = 0;
+    u32 globalParamsSize = 0;
     
     // Embedded geometry (in-editor simple meshes such as
     // a screen filling quad, a cube, a sphere...)
 
     // Location of the texture uniform in the textured quad shader
     GLuint defaultShaderProgram_uTexture;
-
-    // Entities
-    std::vector<Entity> entities;
     
     bool showDemoWindow = false;
 };

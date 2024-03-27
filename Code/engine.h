@@ -16,9 +16,13 @@ void Render(App* app);
 
 void CheckShadersHotReload(App* app);
 
-void CreateEntity(App* app, const glm::mat4& worldMatrix, const u32 modelIndex, const char* name);
+void CreateEntity(App* app, const glm::mat4& worldMatrix, const u32 modelIndex, const char* name, const glm::vec4& color = glm::vec4(1.0f), const u32 programIdx = 0);
+
+void CreateLight(App* app, const glm::vec3& position, const LightType type, const glm::vec3& dir, const glm::vec4& color);
 
 void PushTransformDataToShader(App* app);
+
+void PushLightDataToShader(App* app);
 
 struct VAOSupport
 {
@@ -26,6 +30,7 @@ struct VAOSupport
     static GLuint FindVAO(Mesh& mesh, const u32 subMeshIndex, const Program& program);
 };
 
-static i32 nodeClicked = 0;
+static i32 selectedEntity = 0;
+static i32 selectedLight = 0;
 
 

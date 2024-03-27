@@ -12,12 +12,14 @@
 #include <iostream>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "assimp_model_loading.h"
 #include "mesh_example.h"
 #include "program.h"
 #include "texture.h"
 #include "vertex.h"
+
 
 void Init(App* app)
 {
@@ -32,54 +34,62 @@ void Init(App* app)
     
     // Default Texture loading
     app->diceTexIdx = TextureSupport::LoadTexture2D(app, "dice.png");
-    app->whiteTexIdx = TextureSupport::LoadTexture2D(app, "color_white.png");
-    app->blackTexIdx = TextureSupport::LoadTexture2D(app, "color_black.png");
-    app->normalTexIdx = TextureSupport::LoadTexture2D(app, "color_normal.png");
-    app->magentaTexIdx = TextureSupport::LoadTexture2D(app, "color_magenta.png");
+    // app->whiteTexIdx = TextureSupport::LoadTexture2D(app, "color_white.png");
+    // app->blackTexIdx = TextureSupport::LoadTexture2D(app, "color_black.png");
+    // app->normalTexIdx = TextureSupport::LoadTexture2D(app, "color_normal.png");
+    // app->magentaTexIdx = TextureSupport::LoadTexture2D(app, "color_magenta.png");
     
     // - programs (and retrieve uniform indices)
     //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
     //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.vert", "shaders.frag", "TEXTURED_GEOMETRY");
-    app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "bufferedShader.vert", "bufferedShader.frag", "BUFFERED_SHADER");
+    const u32 texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\buffered_light_shader.vert", "Shaders\\buffered_light_shader.frag", "BUFFERED_LIGHT_PROGRAM");
+    const u32 unlitProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit.vert", "Shaders\\shader_unlit.frag", "UNLIT_PROGRAM");
     //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaded.glsl", "SHADED_MODEL");
 
     // Fill vertex shader layout auto
-    Program& program = app->programs[app->texturedGeometryProgramIdx];
-    int programAttributesCount = 0;
-    glGetProgramiv(program.handle, GL_ACTIVE_ATTRIBUTES, &programAttributesCount);
-    for (int i = 0; i < programAttributesCount; ++i)
+    
+    for (u32 p = 0; p < app->programs.size(); ++p)
     {
-        // Vertex Shader Attribute debug info
-        char attributeName[64];
-        i32 attributeNameLength;
-        i32 attributeSize;
-        u32 attributeType;
-        glGetActiveAttrib(program.handle, i, std::size(attributeName), &attributeNameLength, &attributeSize, &attributeType, attributeName);
-        const u32 attributeLocation = glGetAttribLocation(program.handle, attributeName);
-        std::cout << "Program name: " << program.programName << ", Attribute index: " << i << ", Name: " << attributeName << ", Size: " << attributeSize <<
-            ", Type: " << convertOpenGLDataTypeToString(attributeType) << ", Layout Location: " << attributeLocation << '\n';
+        Program& program = app->programs[p];
+        int programAttributesCount = 0;
+        glGetProgramiv(program.handle, GL_ACTIVE_ATTRIBUTES, &programAttributesCount);
+        for (int i = 0; i < programAttributesCount; ++i)
+        {
+            // Vertex Shader Attribute debug info
+            char attributeName[64];
+            i32 attributeNameLength;
+            i32 attributeSize;
+            u32 attributeType;
+            glGetActiveAttrib(program.handle, i, std::size(attributeName), &attributeNameLength, &attributeSize, &attributeType, attributeName);
+            const u32 attributeLocation = glGetAttribLocation(program.handle, attributeName);
+            std::cout << "Program name: " << program.programName << ", Attribute index: " << i << ", Name: " << attributeName << ", Size: " << attributeSize <<
+                ", Type: " << convertOpenGLDataTypeToString(attributeType) << ", Layout Location: " << attributeLocation << '\n';
 
-        // Vertex Shader Attribute fill
-        program.vertexInputLayout.attributes.push_back({static_cast<u8>(attributeLocation), static_cast<u8>(attributeSize)});
+            // Vertex Shader Attribute fill
+            program.vertexInputLayout.attributes.push_back({static_cast<u8>(attributeLocation), static_cast<u8>(attributeSize)});
+        }
     }
     
-    app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
     app->mode = Mode_TexturedQuad;
 
     const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
 
-    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, -1.0f, 0.0f)), sampleMeshModelIdx, "SampleModel");
-    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.3f)), patrickModelIdx, "PatrickModel");
-    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel2");
-    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(-2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel3");
-
+    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, -1.0f, 0.0f)), sampleMeshModelIdx, "SampleModel", glm::vec4(1.0f), texturedGeometryProgramIdx);
+    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.3f)), patrickModelIdx, "PatrickModel", glm::vec4(1.0f), texturedGeometryProgramIdx);
+    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, 0.5f, 0.0f)), AssimpSupport::LoadModel(app, "Primitives\\Cube.obj"), "Cube", glm::vec4(1.0f), texturedGeometryProgramIdx);
+    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel2", glm::vec4(1.0f), texturedGeometryProgramIdx);
+    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(-2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel3", glm::vec4(1.0f), unlitProgramIdx);
+    CreateLight(app, glm::vec3(0.0f, 2.0f, 0.0f), LightType::POINT, glm::vec3(0.0f), glm::vec4(255.0f/255.0f, 0.0f, 0.0f, 255.0f/255.0f));
+    CreateLight(app, glm::vec3(0.0f, 0.0f, 0.0f), LightType::POINT, glm::vec3(0.0f), glm::vec4(0.0f, 255.0f/255.0f, 0.0f, 255.0f/255.0f));
     PushTransformDataToShader(app);
+
+    app->camera.position = glm::vec3(0.0f, 1.0f, 8.0f);
 }
 
 void CameraGUI(App* app) {
     ImGui::Text("Camera");
-    ImGui::InputFloat3("Position", &app->camera.position[0]);
+    ImGui::InputFloat3("Position##Camera", &app->camera.position[0]);
     if(ImGui::InputFloat3("Pitch/Yaw/Roll", &app->camera.angles[0]))
         app->camera.UpdateCameraVectors();
 }
@@ -113,24 +123,24 @@ void EntityHierarchyGUI(const App* app)
         {
             // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
             ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-            const bool isSelected = nodeClicked == i;
+            const bool isSelected = selectedEntity == i;
             if (isSelected)
                 nodeFlags |= ImGuiTreeNodeFlags_Selected;
             nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
             ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %d", app->entities[i].name.c_str(), i);
             if (ImGui::IsItemClicked())
-                nodeClicked = i;
+                selectedEntity = i;
         }
     }
 }
 void EntityTransformGUI(App* app) {
-    ImGui::Text("Transform: %s", app->entities[nodeClicked].name.c_str());
+    ImGui::Text("Model Transform: %s", app->entities[selectedEntity].name.c_str());
 
     // Decompose model matrix
     glm::vec3 translation, scale, skew;
     glm::vec4 perspective;
     glm::quat orientation;
-    glm::decompose(app->entities[nodeClicked].worldMatrix, scale, orientation, translation, skew, perspective);
+    glm::decompose(app->entities[selectedEntity].worldMatrix, scale, orientation, translation, skew, perspective);
     glm::vec3 eulerAnglesOrientation = glm::degrees(glm::eulerAngles(orientation));
 
     // Modify values
@@ -148,8 +158,47 @@ void EntityTransformGUI(App* app) {
         composedModelMat *= glm::toMat4(orientation); // Combine rotation
         composedModelMat = glm::scale(composedModelMat, scale);
     
-        app->entities[nodeClicked].worldMatrix = composedModelMat;
+        app->entities[selectedEntity].worldMatrix = composedModelMat;
     }
+
+    constexpr bool alphaPreview = true;
+    constexpr bool alphaHalfPreview = false;
+    constexpr bool optionsMenu = true;
+    constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
+    ImGui::ColorEdit4("ObjectColor##2", (float*)&app->entities[selectedEntity].color[0], miscFlags);
+}
+void LightHierarchyGUI(App* app)
+{
+    if (ImGui::CollapsingHeader("Lights Hierarchy", ImGuiTreeNodeFlags_None))
+    {
+        const i64 lightsCount = (i64)app->lights.size();
+        for (int i = 0; i < lightsCount; i++)
+        {
+            // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
+            ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+            const bool isSelected = selectedLight == i;
+            if (isSelected)
+                nodeFlags |= ImGuiTreeNodeFlags_Selected;
+            nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
+            ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %s %d", LightTypeNames[(i32)app->lights[i].type], glm::to_string(app->lights[i].color).c_str(), i);
+            if (ImGui::IsItemClicked())
+                selectedLight = i;
+        }
+    }
+}
+void LightTransformGUI(App* app) {
+    ImGui::Text("Light Transform: %s %s", LightTypeNames[(i32)app->lights[selectedLight].type], glm::to_string(app->lights[selectedLight].color).c_str());
+    ImGui::InputFloat3("Position##Light", &app->lights[selectedLight].position[0]);
+    ImGui::InputFloat3("Direction", &app->lights[selectedLight].direction[0]);
+    
+    constexpr bool alphaPreview = true;
+    constexpr bool alphaHalfPreview = false;
+    constexpr bool optionsMenu = true;
+    // ImGui::Checkbox("With Alpha Preview", &alphaPreview);
+    // ImGui::Checkbox("With Half Alpha Preview", &alphaHalfPreview);
+    // ImGui::Checkbox("With Options Menu", &optionsMenu);
+    constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
+    ImGui::ColorEdit4("LightColor##1", (float*)&app->lights[selectedLight].color[0], miscFlags);
 }
 void Gui(App* app)
 {
@@ -163,7 +212,26 @@ void Gui(App* app)
     ImGui::Separator();
     EntityTransformGUI(app);
     ImGui::Separator();
+    LightTransformGUI(app);
+    u32& itemCurrentIdx = app->entities[selectedEntity].programIndex;                    // Here our selection data is an index.
+    const char* comboLabel = app->programs[itemCurrentIdx].programName.c_str();  // Label to preview before opening the combo (technically it could be anything)
+    if (ImGui::BeginCombo("Active program", comboLabel))
+    {
+        for (u32 n = 0; n < app->programs.size(); n++)
+        {
+            const bool isSelected = (itemCurrentIdx == n);
+            if (ImGui::Selectable(app->programs[n].programName.c_str(), isSelected))
+                itemCurrentIdx = n;
+
+            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::Separator();
     EntityHierarchyGUI(app);
+    LightHierarchyGUI(app);
     ImGui::End();
 }
 
@@ -188,6 +256,7 @@ void Update(App* app)
     CheckShadersHotReload(app);
 
     PushTransformDataToShader(app);
+    PushLightDataToShader(app);
 }
 
 void Render(App* app)
@@ -207,7 +276,6 @@ void Render(App* app)
     {
     case Mode_TexturedQuad:
         {
-            // TODO: Draw your textured quad here!
             // - clear the framebuffer
             // - set the viewport
             // - set the blending state
@@ -216,14 +284,17 @@ void Render(App* app)
             //   (...and make its texture sample from unit 0)
             // - bind the vao
             // - glDrawElements() !!!
-
-            const Program& program = app->programs[app->texturedGeometryProgramIdx];
-            glUseProgram(program.handle);
         
+            BufferManagement::BindBufferRange(app->uniformBuffer, 0, app->globalParamsSize, app->globalParamsOffset);
+
             const u32 entityCount = static_cast<u32>(app->entities.size());
             for (u32 e = 0; e < entityCount; ++e)
             {
                 const Entity& entity = app->entities[e];
+                
+                const Program& program = app->programs[entity.programIndex];
+                app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
+                glUseProgram(program.handle);
                 BufferManagement::BindBufferRange(app->uniformBuffer, 1, entity.localParamsSize, entity.localParamsOffset);
 
                 Model& model = app->models[entity.modelIndex];
@@ -293,15 +364,30 @@ void CheckShadersHotReload(App* app)
         }
     }
 }
-void CreateEntity(App* app, const glm::mat4& worldMatrix, const u32 modelIndex, const char* name)
+
+void CreateEntity(App* app, const glm::mat4& worldMatrix, const u32 modelIndex, const char* name, const glm::vec4& color, const u32 programIdx)
 {
     Entity entity = {};
     entity.name = name;
     entity.worldMatrix = worldMatrix;
     entity.modelIndex = modelIndex;
-
+    entity.color = color;
+    entity.programIndex = programIdx;
+    
     app->entities.emplace_back(entity);
 }
+
+void CreateLight(App* app, const glm::vec3& position, const LightType type, const glm::vec3& dir, const glm::vec4& color)
+{
+    Light light = {};
+    light.type = type;
+    light.position = position;
+    light.direction = dir;
+    light.color = color;
+
+    app->lights.emplace_back(light);
+}
+
 void PushTransformDataToShader(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
@@ -314,7 +400,8 @@ void PushTransformDataToShader(App* app)
         Entity& entity = entities[i];
         BufferManagement::AlignHead(uniformBuffer, sizeof(vec4));
         entity.localParamsOffset = uniformBuffer.head;
-        
+
+        PUSH_VEC4(uniformBuffer, entity.color);
         PUSH_MAT4(uniformBuffer, entity.worldMatrix);
         entity.worldViewProjectionMat = app->projectionMat * app->camera.GetViewMatrix() * entity.worldMatrix;
         PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
@@ -323,6 +410,28 @@ void PushTransformDataToShader(App* app)
     }
     
     BufferManagement::UnmapBuffer(uniformBuffer);
+}
+void PushLightDataToShader(App* app)
+{
+    Buffer& uniformBuffer = app->uniformBuffer;
+
+    app->globalParamsOffset = uniformBuffer.head;
+
+    const u32 lightsCount = (u32)app->lights.size();
+    PUSH_VEC3(uniformBuffer, app->camera.position);
+    PUSH_U_INT(uniformBuffer, lightsCount);
+    for (u32 i = 0; i < lightsCount; ++i)
+    {
+        BufferManagement::AlignHead(uniformBuffer, sizeof(vec4));
+
+        Light& light = app->lights[i];
+        PUSH_U_INT(uniformBuffer, (u32)light.type);
+        PUSH_VEC3(uniformBuffer, light.color);
+        PUSH_VEC3(uniformBuffer, light.direction);
+        PUSH_VEC3(uniformBuffer, light.position);
+    }
+
+    app->globalParamsSize = uniformBuffer.head - app->globalParamsOffset;
 }
 
 void VAOSupport::CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle)

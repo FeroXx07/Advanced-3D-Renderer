@@ -12,7 +12,7 @@ struct Buffer
     GLenum type;
     GLuint handle;
     
-    u8* data;
+    void* data;
     u32 head;
 };
 

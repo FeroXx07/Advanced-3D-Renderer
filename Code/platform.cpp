@@ -275,7 +275,7 @@ int main()
         glfwSwapBuffers(window);
 
         // Frame time
-        f64 currentFrameTime = glfwGetTime();
+        const f64 currentFrameTime = glfwGetTime();
         app.deltaTime = (f32)(currentFrameTime - lastFrameTime);
         lastFrameTime = currentFrameTime;
 
