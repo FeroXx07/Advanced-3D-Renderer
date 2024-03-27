@@ -34,17 +34,13 @@ void Init(App* app)
     
     // Default Texture loading
     app->diceTexIdx = TextureSupport::LoadTexture2D(app, "dice.png");
-    // app->whiteTexIdx = TextureSupport::LoadTexture2D(app, "color_white.png");
-    // app->blackTexIdx = TextureSupport::LoadTexture2D(app, "color_black.png");
-    // app->normalTexIdx = TextureSupport::LoadTexture2D(app, "color_normal.png");
-    // app->magentaTexIdx = TextureSupport::LoadTexture2D(app, "color_magenta.png");
     
     // - programs (and retrieve uniform indices)
-    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
-    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaders.vert", "shaders.frag", "TEXTURED_GEOMETRY");
-    const u32 texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\buffered_light_shader.vert", "Shaders\\buffered_light_shader.frag", "BUFFERED_LIGHT_PROGRAM");
-    const u32 unlitProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit.vert", "Shaders\\shader_unlit.frag", "UNLIT_PROGRAM");
-    //app->texturedGeometryProgramIdx = ShaderSupport::LoadProgram(app, "shaded.glsl", "SHADED_MODEL");
+    const u32 litTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_lit_textured.vert", "Shaders\\shader_lit_textured.frag", "LIT_TEXTURED");
+    const u32 litBaseProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_lit_base.vert", "Shaders\\shader_lit_base.frag", "LIT_BASE");
+
+    const u32 unlitBaseProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_base.vert", "Shaders\\shader_unlit_base.frag", "UNLIT_BASE");
+    const u32 unlitTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_textured.vert", "Shaders\\shader_unlit_textured.frag", "UNLIT_TEXTURED");
 
     // Fill vertex shader layout auto
     
@@ -75,13 +71,16 @@ void Init(App* app)
     const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
 
-    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, -1.0f, 0.0f)), sampleMeshModelIdx, "SampleModel", glm::vec4(1.0f), texturedGeometryProgramIdx);
-    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.3f)), patrickModelIdx, "PatrickModel", glm::vec4(1.0f), texturedGeometryProgramIdx);
-    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, 0.5f, 0.0f)), AssimpSupport::LoadModel(app, "Primitives\\Cube.obj"), "Cube", glm::vec4(1.0f), texturedGeometryProgramIdx);
-    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel2", glm::vec4(1.0f), texturedGeometryProgramIdx);
-    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(-2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel3", glm::vec4(1.0f), unlitProgramIdx);
+    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, -1.0f, 0.0f)), sampleMeshModelIdx, "SampleModel", glm::vec4(1.0f), litTexturedProgramIdx);
+    CreateEntity(app, glm::translate(identityMat, glm::vec3(0.0f, 0.5f, 0.0f)), AssimpSupport::LoadModel(app, "Primitives\\Cube.obj"), "Cube", glm::vec4(1.0f), litTexturedProgramIdx);
+
+    CreateEntity(app, glm::scale(identityMat, glm::vec3(0.3f)), patrickModelIdx, "PatrickModel", glm::vec4(1.0f), litTexturedProgramIdx);
+    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel2", glm::vec4(1.0f), litBaseProgramIdx);
+    CreateEntity(app, glm::scale(glm::translate(identityMat, glm::vec3(-2.0f, 0.0f, 0.0f)), glm::vec3(0.3f)), patrickModelIdx, "PatrickModel3", glm::vec4(1.0f), unlitBaseProgramIdx);
+
+    CreateLight(app, glm::vec3(0.0f, 0.0f, 0.0f), LightType::DIRECTIONAL, glm::vec3(0.0f), glm::vec4(0.0f, 255.0f/255.0f, 0.0f, 255.0f/255.0f));
     CreateLight(app, glm::vec3(0.0f, 2.0f, 0.0f), LightType::POINT, glm::vec3(0.0f), glm::vec4(255.0f/255.0f, 0.0f, 0.0f, 255.0f/255.0f));
-    CreateLight(app, glm::vec3(0.0f, 0.0f, 0.0f), LightType::POINT, glm::vec3(0.0f), glm::vec4(0.0f, 255.0f/255.0f, 0.0f, 255.0f/255.0f));
+   
     PushTransformDataToShader(app);
 
     app->camera.position = glm::vec3(0.0f, 1.0f, 8.0f);
