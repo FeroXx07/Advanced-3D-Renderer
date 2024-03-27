@@ -7,8 +7,14 @@ struct Entity
     std::string name;
 
     glm::vec4 color;
+    
     glm::mat4 worldMatrix;
     glm::mat4 worldViewProjectionMat;
+    
+    glm::vec3 position;
+    glm::vec3 orientation;
+    glm::vec3 scale;
+    
     u32 modelIndex;
     u32 programIndex;
     u32 localParamsOffset;

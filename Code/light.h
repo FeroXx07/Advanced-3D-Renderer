@@ -8,12 +8,9 @@ enum class LightType
     POINT = 1
 };
 
-struct Light
+struct Light : public Entity
 {
     LightType type;
-    glm::vec4 color;
-    glm::vec3 direction;
-    glm::vec3 position;
 };
 
 static const char* LightTypeNames[] = 

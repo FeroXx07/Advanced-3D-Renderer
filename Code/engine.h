@@ -16,13 +16,26 @@ void Render(App* app);
 
 void CheckShadersHotReload(App* app);
 
-void CreateEntity(App* app, const glm::mat4& worldMatrix, const u32 modelIndex, const char* name, const glm::vec4& color = glm::vec4(1.0f), const u32 programIdx = 0);
+void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,
+    const u32 modelIndex, const u32 programIdx = 0, const glm::vec4& diffuseColor = glm::vec4(1.0f), const char* name = "None");
 
-void CreateLight(App* app, const glm::vec3& position, const LightType type, const glm::vec3& dir, const glm::vec4& color);
+void CreateLight(App* app, LightType lightType, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,
+    const u32 modelIndex, const u32 programIdx = 0, const glm::vec4& lightColor = glm::vec4(1.0f), const char* name = "None");
 
 void PushTransformDataToShader(App* app);
 
 void PushLightDataToShader(App* app);
+
+inline std::vector<Light*> GetLights(App* app)
+{
+    std::vector<Light*> lights;
+    for (Entity& entity : app->entities) {
+        if (Light* light = reinterpret_cast<Light*>(&entity)) {
+            lights.push_back(light);
+        }
+    }
+    return lights;
+}
 
 struct VAOSupport
 {
@@ -31,6 +44,6 @@ struct VAOSupport
 };
 
 static i32 selectedEntity = 0;
-static i32 selectedLight = 0;
+
 
 

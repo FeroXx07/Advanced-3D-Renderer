@@ -41,7 +41,6 @@ struct App
     std::vector<Material> materials;
     std::vector<Model> models;
     std::vector<Entity> entities;
-    std::vector<Light> lights;
     
     // texture indices
     u32 diceTexIdx;
