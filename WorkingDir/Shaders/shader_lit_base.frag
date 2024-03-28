@@ -49,7 +49,7 @@ void main()
 		vec3 diffuse = diff * uLight[i].color;
 		
 		// Calculate Specular lightning
-		float specularStrength = 0.5;
+		float specularStrength = 0.8;
 		vec3 nViewDir = normalize(sViewDir);
 		// Negate the lightDir vector. The reflect function expects the first vector to point from the light source towards the fragment's position
 		vec3 reflectDir = reflect(-lightDir, sNormal);  

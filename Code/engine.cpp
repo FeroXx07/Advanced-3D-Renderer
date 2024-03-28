@@ -88,8 +88,10 @@ void Init(App* app)
     
     // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
     //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
-    CreateLight(app, LightType::POINT, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
+    CreateLight(app, LightType::POINT, glm::vec3(1.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
        ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Point Light");
+    CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
+       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
     
     app->camera.position = glm::vec3(-1.0f, 1.0f, 8.0f);
 
