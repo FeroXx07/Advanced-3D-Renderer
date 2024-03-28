@@ -71,26 +71,29 @@ void Init(App* app)
     const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
+    const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
     
     CreateEntity(app, glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,sampleMeshModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
     CreateEntity(app, glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,cubeModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "Cube");
-    CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-        ,patrickModelIdx, litBaseProgramIdx, glm::vec4(1.0f), "PatrickModel");
+        ,cubeModelIdx, litBaseProgramIdx, glm::vec4(1.0f), "Cube");
+    CreateEntity(app, glm::vec3(-4.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+        ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     CreateEntity(app, glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-        ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "PatrickModel");
+        ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+        ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     
-    CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
-        ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
+    // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
+    //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
     CreateLight(app, LightType::POINT, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
        ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Point Light");
-   
-    PushTransformDataToShader(app);
+    
+    app->camera.position = glm::vec3(-1.0f, 1.0f, 8.0f);
 
-    app->camera.position = glm::vec3(0.0f, 1.0f, 8.0f);
+    PushTransformDataToShader(app);
 }
 
 void CameraGUI(App* app) {
@@ -100,8 +103,8 @@ void CameraGUI(App* app) {
         app->camera.UpdateCameraVectors();
 }
 void OpenGLContextGUI(App* app) {
-    ImGui::Checkbox("#Show Demo Window", &app->showDemoWindow);
-    ImGui::Checkbox("#Draw Wireframe", &app->drawWireFrame);
+    ImGui::Checkbox("Show Demo Window", &app->showDemoWindow);
+    ImGui::Checkbox("Draw Wireframe", &app->drawWireFrame);
     ImGui::Separator();
     ImGui::Text("OpenGL Context");
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS:");
@@ -133,82 +136,59 @@ void EntityHierarchyGUI(const App* app)
             if (isSelected)
                 nodeFlags |= ImGuiTreeNodeFlags_Selected;
             nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-            ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %d", app->entities[i].name.c_str(), i);
+            ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %d", app->entities[i]->name.c_str(), i);
             if (ImGui::IsItemClicked())
                 selectedEntity = i;
         }
     }
 }
-void EntityTransformGUI(App* app) {
-    ImGui::Text("Entity: %s", app->entities[selectedEntity].name.c_str());
-
-    Entity& entity = app->entities[selectedEntity];
+void EntityTransformGUI(App* app)
+{
+    ImGui::Text("Entity: %s", app->entities[selectedEntity]->name.c_str());
     
-    // Decompose model matrix
-    glm::vec3 skew;
-    glm::vec4 perspective;
-    glm::quat orientation;
-    glm::decompose(app->entities[selectedEntity].worldMatrix, entity.scale, orientation, entity.position, skew, perspective);
-    glm::vec3 eulerAnglesOrientation = glm::degrees(glm::eulerAngles(orientation));
-
-    // Modify values
-    bool valueChanged = false;
-    if (ImGui::InputFloat3("Translation", &entity.position[0]) || ImGui::InputFloat3("Orientation", &eulerAnglesOrientation[0]) || ImGui::InputFloat3("Scale", &entity.scale[0]))
-        valueChanged = true;
-
-    if (valueChanged)
+    if (app->entities[selectedEntity])
     {
-        // Compose model matrix
-        entity.orientation = eulerAnglesOrientation;
-        orientation = glm::quat(glm::radians(eulerAnglesOrientation));
-        entity.scale = glm::clamp(entity.scale, glm::vec3(0.001f), glm::vec3(100.0f));
-        glm::mat4 composedModelMat = glm::mat4(1.0f);
-        composedModelMat = glm::translate(composedModelMat, entity.position);
-        composedModelMat *= glm::toMat4(orientation); // Combine rotation
-        composedModelMat = glm::scale(composedModelMat, entity.scale);
-    
-        entity.worldMatrix = composedModelMat;
-    }
+        Entity& entity = *app->entities[selectedEntity];
+        // Decompose model matrix
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::quat orientation;
+        glm::decompose(app->entities[selectedEntity]->worldMatrix, entity.scale, orientation, entity.position, skew, perspective);
+        glm::vec3 eulerAnglesOrientation = glm::degrees(glm::eulerAngles(orientation));
+        
+        // Modify values
+        bool valueChanged = false;
+        if (ImGui::InputFloat3("Translation", glm::value_ptr(entity.position))
+            || ImGui::InputFloat3("Orientation Euler", glm::value_ptr(eulerAnglesOrientation), "%.3f")
+            || ImGui::InputFloat4("Orientation Quat", glm::value_ptr(entity.orientationQuat), "%.3f", ImGuiInputTextFlags_ReadOnly)
+            || ImGui::InputFloat3("Scale", glm::value_ptr(entity.scale)))
+            valueChanged = true;
+        
+        if (valueChanged && !ImGui::IsItemActive())
+        {
+            // Update the entity's orientation quaternion and Euler angles
+            entity.orientationQuat = glm::quat(glm::radians(eulerAnglesOrientation));
+            entity.orientationEuler = eulerAnglesOrientation;
+            entity.scale = glm::clamp(entity.scale, glm::vec3(0.001f), glm::vec3(100.0f));
 
-    constexpr bool alphaPreview = true;
-    constexpr bool alphaHalfPreview = false;
-    constexpr bool optionsMenu = true;
-    constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
-    ImGui::ColorEdit4("ObjectColor##2", (float*)&app->entities[selectedEntity].color[0], miscFlags);
+            // Recompose the model matrix
+            glm::mat4 composedModelMat = glm::mat4(1.0f);
+            composedModelMat = glm::translate(composedModelMat, entity.position);
+            composedModelMat = composedModelMat * glm::toMat4(entity.orientationQuat);
+            composedModelMat = glm::scale(composedModelMat, entity.scale);
+
+            // Update the world matrix of the entity
+            entity.worldMatrix = composedModelMat;
+        }
+        
+        constexpr bool alphaPreview = true;
+        constexpr bool alphaHalfPreview = false;
+        constexpr bool optionsMenu = true;
+        constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
+        ImGui::ColorEdit4("ObjectColor##2", (float*)&app->entities[selectedEntity]->color[0], miscFlags);
+    }
 }
-// void LightHierarchyGUI(App* app)
-// {
-//     if (ImGui::CollapsingHeader("Lights Hierarchy", ImGuiTreeNodeFlags_None))
-//     {
-//         const i64 lightsCount = (i64)app->lights.size();
-//         for (int i = 0; i < lightsCount; i++)
-//         {
-//             // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
-//             ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-//             const bool isSelected = selectedLight == i;
-//             if (isSelected)
-//                 nodeFlags |= ImGuiTreeNodeFlags_Selected;
-//             nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-//             ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %s %d", LightTypeNames[(i32)app->lights[i].type], glm::to_string(app->lights[i].color).c_str(), i);
-//             if (ImGui::IsItemClicked())
-//                 selectedLight = i;
-//         }
-//     }
-// }
-// void LightTransformGUI(App* app) {
-//     ImGui::Text("Light Transform: %s %s", LightTypeNames[(i32)app->lights[selectedLight].type], glm::to_string(app->lights[selectedLight].color).c_str());
-//     ImGui::InputFloat3("Position##Light", &app->lights[selectedLight].position[0]);
-//     ImGui::InputFloat3("Direction", &app->lights[selectedLight].direction[0]);
-//     
-//     constexpr bool alphaPreview = true;
-//     constexpr bool alphaHalfPreview = false;
-//     constexpr bool optionsMenu = true;
-//     // ImGui::Checkbox("With Alpha Preview", &alphaPreview);
-//     // ImGui::Checkbox("With Half Alpha Preview", &alphaHalfPreview);
-//     // ImGui::Checkbox("With Options Menu", &optionsMenu);
-//     constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
-//     ImGui::ColorEdit4("LightColor##1", (float*)&app->lights[selectedLight].color[0], miscFlags);
-// }
+
 void Gui(App* app)
 {
     if (app->showDemoWindow)
@@ -222,7 +202,7 @@ void Gui(App* app)
     EntityTransformGUI(app);
     ImGui::Separator();
     //LightTransformGUI(app);
-    u32& itemCurrentIdx = app->entities[selectedEntity].programIndex;                    // Here our selection data is an index.
+    u32& itemCurrentIdx = app->entities[selectedEntity]->programIndex;                    // Here our selection data is an index.
     const char* comboLabel = app->programs[itemCurrentIdx].programName.c_str();  // Label to preview before opening the combo (technically it could be anything)
     if (ImGui::BeginCombo("Active program", comboLabel))
     {
@@ -299,7 +279,7 @@ void Render(App* app)
             const u32 entityCount = static_cast<u32>(app->entities.size());
             for (u32 e = 0; e < entityCount; ++e)
             {
-                const Entity& entity = app->entities[e];
+                const Entity& entity = *app->entities[e];
                 
                 const Program& program = app->programs[entity.programIndex];
                 app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
@@ -355,6 +335,7 @@ void CheckShadersHotReload(App* app)
             const u64 currentTimeStamp = GetFileLastWriteTimestamp(program.filePaths[j].c_str());
             if (currentTimeStamp > program.lastWriteTimestamp)
             {
+                std::cout << "Program hot reload: " << program.programName << ", TimeStamp: " << currentTimeStamp <<"\n\n";
                 glDeleteProgram(program.handle);
                 const char* programName = program.programName.c_str();
                 if (program.filePaths.size() > 1)
@@ -375,45 +356,49 @@ void CheckShadersHotReload(App* app)
 }
 void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale, const u32 modelIndex, const u32 programIdx, const glm::vec4& diffuseColor, const char* name)
 {
-    Entity entity = {};
-    entity.name = name;
+    std::shared_ptr<Entity> entity = std::make_shared<Entity>();
+    entity->name = name;
     
-    entity.position = position;
-    entity.orientation = orientation;
-    entity.scale = scale;
+    entity->position = position;
+    entity->orientationEuler = orientation;
+    entity->orientationQuat = glm::quat(glm::radians(orientation));
+    entity->scale = scale;
     
-    entity.worldMatrix = glm::mat4(1.0f);
-    entity.worldMatrix = glm::translate(entity.worldMatrix, entity.position);
-    entity.worldMatrix *= glm::toMat4(glm::quat(glm::radians(entity.orientation)));
-    entity.worldMatrix = glm::scale(entity.worldMatrix, entity.scale);
-    
-    entity.modelIndex = modelIndex;
-    entity.color = diffuseColor;
-    entity.programIndex = programIdx;
+    entity->worldMatrix = glm::mat4(1.0f);
+    entity->worldMatrix = glm::translate(entity->worldMatrix, entity->position);
+    entity->worldMatrix *= glm::toMat4(entity->orientationQuat);
+    entity->worldMatrix = glm::scale(entity->worldMatrix, entity->scale);
+
+    entity->modelIndex = modelIndex;
+    entity->color = diffuseColor;
+    entity->programIndex = programIdx;
     
     app->entities.emplace_back(entity);
 }
 void CreateLight(App* app, LightType lightType, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale, const u32 modelIndex, const u32 programIdx, const glm::vec4& lightColor, const char* name)
 {
-    Light light = {};
-    light.type = lightType;
+    std::shared_ptr<Light> light = std::make_shared<Light>();
+    light->type = lightType;
+    light->eType = EntityType::LIGHT;
+    
+    light->name = name;
+    
+    light->position = position;
+    light->orientationEuler = orientation;
+    light->orientationQuat = glm::quat(glm::radians(orientation));
+    light->scale = scale;
+    
+    light->worldMatrix = glm::mat4(1.0f);
+    light->worldMatrix = glm::translate(light->worldMatrix, light->position);
+    light->worldMatrix *= glm::toMat4(light->orientationQuat);
+    light->worldMatrix = glm::scale(light->worldMatrix, light->scale);
 
-    light.name = name;
-    
-    light.position = position;
-    light.orientation = orientation;
-    light.scale = scale;
-    
-    light.worldMatrix = glm::mat4(1.0f);
-    light.worldMatrix = glm::translate(light.worldMatrix, light.position);
-    light.worldMatrix *= glm::toMat4(glm::quat(glm::radians(light.orientation)));
-    light.worldMatrix = glm::scale(light.worldMatrix, light.scale);
-    
-    light.modelIndex = modelIndex;
-    light.color = lightColor;
-    light.programIndex = programIdx;
+    light->modelIndex = modelIndex;
+    light->color = lightColor;
+    light->programIndex = programIdx;
     
     app->entities.emplace_back(light);
+    app->lights.emplace_back(light);
 }
 
 void PushTransformDataToShader(App* app)
@@ -421,11 +406,10 @@ void PushTransformDataToShader(App* app)
     Buffer& uniformBuffer = app->uniformBuffer;
     BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
 
-    std::vector<Entity>& entities = app->entities;
     const u64 entityCount = app->entities.size();
     for (u32 i = 0; i < entityCount; ++i)
     {
-        Entity& entity = entities[i];
+        Entity& entity = *app->entities[i];
         BufferManagement::AlignHead(uniformBuffer, sizeof(vec4));
         entity.localParamsOffset = uniformBuffer.head;
 
@@ -444,18 +428,17 @@ void PushLightDataToShader(App* app)
     Buffer& uniformBuffer = app->uniformBuffer;
 
     app->globalParamsOffset = uniformBuffer.head;
-    const std::vector<Light*> lights = GetLights(app);
-    const u32 lightsCount = (u32)lights.size();
+    const u32 lightsCount = (u32)app->lights.size();
     PUSH_VEC3(uniformBuffer, app->camera.position);
     PUSH_U_INT(uniformBuffer, lightsCount);
     for (u32 i = 0; i < lightsCount; ++i)
     {
         BufferManagement::AlignHead(uniformBuffer, sizeof(vec4));
 
-        Light& light = *lights[i];
+        const Light& light = *app->lights[i];
         PUSH_U_INT(uniformBuffer, (u32)light.type);
         PUSH_VEC3(uniformBuffer, light.color);
-        PUSH_VEC3(uniformBuffer, light.orientation);
+        PUSH_VEC3(uniformBuffer, light.orientationEuler);
         PUSH_VEC3(uniformBuffer, light.position);
     }
 

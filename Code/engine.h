@@ -26,17 +26,6 @@ void PushTransformDataToShader(App* app);
 
 void PushLightDataToShader(App* app);
 
-inline std::vector<Light*> GetLights(App* app)
-{
-    std::vector<Light*> lights;
-    for (Entity& entity : app->entities) {
-        if (Light* light = reinterpret_cast<Light*>(&entity)) {
-            lights.push_back(light);
-        }
-    }
-    return lights;
-}
-
 struct VAOSupport
 {
     static void CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle);

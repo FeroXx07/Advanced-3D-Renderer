@@ -2,17 +2,25 @@
 #define ENTITY_H
 #include "platform.h"
 
+enum class EntityType
+{
+    BASE = 0,
+    LIGHT = 1
+};
+
 struct Entity
 {
     std::string name;
-
+    EntityType eType = EntityType::BASE;
+    
     glm::vec4 color;
     
     glm::mat4 worldMatrix;
     glm::mat4 worldViewProjectionMat;
     
     glm::vec3 position;
-    glm::vec3 orientation;
+    glm::vec3 orientationEuler;
+    glm::quat orientationQuat;
     glm::vec3 scale;
     
     u32 modelIndex;

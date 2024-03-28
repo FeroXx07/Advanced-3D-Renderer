@@ -2,6 +2,7 @@
 #define APP_H
 #include "platform.h"
 #include <vector>
+#include <memory>
 
 #include "camera.h"
 #include "entity.h"
@@ -40,7 +41,8 @@ struct App
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
     std::vector<Model> models;
-    std::vector<Entity> entities;
+    std::vector<std::shared_ptr<Entity>> entities;
+    std::vector<std::shared_ptr<Light>> lights;
     
     // texture indices
     u32 diceTexIdx;
