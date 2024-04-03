@@ -7,6 +7,10 @@ bool BufferManagement::IsPowerOf2(const u32 value)
 {
     return value && !(value & (value - 1));
 }
+bool BufferManagement::IsMultipleOf(const u32 value, const u32 divider)
+{
+    return (value % divider) == 0;
+}
 
 u32 BufferManagement::Align(const u32 value, const u32 alignment)
 {
@@ -72,5 +76,6 @@ void BufferManagement::InitUniformBuffer()
 }
 void BufferManagement::BindBufferRange(const Buffer& buffer, const u32 bindingPoint = 0, const u32 blockSize = 0, const u32 blockOffset = 0)
 {
+    ASSERT(IsMultipleOf(blockSize, BufferManagement::uniformBlockAlignment), "The size must be multiple of uniform block alignment");
     glBindBufferRange(GL_UNIFORM_BUFFER, bindingPoint, buffer.handle, blockOffset, blockSize);
 }

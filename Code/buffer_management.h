@@ -21,7 +21,8 @@ struct Buffer
 class BufferManagement
 {
 public:
-    static bool IsPowerOf2(u32 value);
+    static bool IsPowerOf2(const u32 value);
+    static bool IsMultipleOf(const u32 value, const u32 divider);
     
     // Rounds down the adjusted value to the nearest multiple of the alignment boundary
     static u32 Align(u32 value, u32 alignment);
@@ -48,10 +49,10 @@ public:
 
 // sizeof(vec4) is the 4N where, N = 4 bytes is the basic machine unit,
 #define PUSH_DATA(buffer, data, size) BufferManagement::PushAlignedData(buffer, data, size, 1)
-#define PUSH_U_INT(buffer, value) { u32 v = value; BufferManagement::PushAlignedData(buffer, &v, sizeof(v), BASIC_MACHINE_UNIT); }
-#define PUSH_VEC3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
-#define PUSH_VEC4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
-#define PUSH_MAT3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
-#define PUSH_MAT4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
+#define PUSH_U_INT(buffer, value) { u32 v = value; BufferManagement::PushAlignedData(buffer, &v, sizeof(v), BufferManagement::uniformBlockAlignment/4); }
+#define PUSH_VEC3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), BufferManagement::uniformBlockAlignment)
+#define PUSH_VEC4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), BufferManagement::uniformBlockAlignment)
+#define PUSH_MAT3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), BufferManagement::uniformBlockAlignment)
+#define PUSH_MAT4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), BufferManagement::uniformBlockAlignment)
 
 #endif // BUFFER_MANAGEMENT_H

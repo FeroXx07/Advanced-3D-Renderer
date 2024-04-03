@@ -431,7 +431,7 @@ void PushTransformDataToShader(App* app)
     for (u32 i = 0; i < entityCount; ++i)
     {
         Entity& entity = *app->entities[i];
-        BufferManagement::AlignHead(uniformBuffer, sizeof(vec4));
+        BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
         entity.localParamsOffset = uniformBuffer.head;
 
         PUSH_VEC4(uniformBuffer, entity.color);
@@ -451,14 +451,14 @@ void PushTransformDataToShader(App* app)
 void PushLightDataToShader(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
-
+    
     app->globalParamsOffset = uniformBuffer.head;
     const u32 lightsCount = (u32)app->lights.size();
     PUSH_VEC3(uniformBuffer, app->camera.position);
     PUSH_U_INT(uniformBuffer, lightsCount);
     for (u32 i = 0; i < lightsCount; ++i)
     {
-        BufferManagement::AlignHead(uniformBuffer, sizeof(vec4));
+        BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
 
         const Light& light = *app->lights[i];
         PUSH_U_INT(uniformBuffer, (u32)light.type);
@@ -466,7 +466,8 @@ void PushLightDataToShader(App* app)
         PUSH_VEC3(uniformBuffer, light.orientationEuler);
         PUSH_VEC3(uniformBuffer, light.position);
     }
-
+    
+    BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
     app->globalParamsSize = uniformBuffer.head - app->globalParamsOffset;
 
     if (app->debugUBO)
