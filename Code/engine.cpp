@@ -68,7 +68,7 @@ void Init(App* app)
     
     app->mode = Mode_TexturedQuad;
 
-    const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\patrick.obj");
+    const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\Patrick.obj");
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
@@ -79,23 +79,23 @@ void Init(App* app)
         ,cubeModelIdx, litBaseProgramIdx, glm::vec4(1.0f), "Cube");
     CreateEntity(app, glm::vec3(-4.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
         ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-        ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-        ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    // CreateEntity(app, glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+    //     ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    // CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+    //     ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    // CreateEntity(app, glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+    //    ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     
     // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
     //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
     CreateLight(app, LightType::POINT, glm::vec3(1.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
        ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Point Light");
-    CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
-       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
+    /*CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
+       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");*/
     
     app->camera.position = glm::vec3(-1.0f, 1.0f, 8.0f);
 
-    PushTransformDataToShader(app);
+    //PushTransformDataToShader(app);
 }
 
 void CameraGUI(App* app) {
@@ -245,9 +245,11 @@ void Update(App* app)
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
     
     CheckShadersHotReload(app);
-
+    Buffer& uniformBuffer = app->uniformBuffer;
+    BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
     PushTransformDataToShader(app);
     PushLightDataToShader(app);
+    BufferManagement::UnmapBuffer(uniformBuffer);
 }
 
 void Render(App* app)
@@ -406,7 +408,6 @@ void CreateLight(App* app, LightType lightType, const glm::vec3& position, const
 void PushTransformDataToShader(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
-    BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
 
     const u64 entityCount = app->entities.size();
     for (u32 i = 0; i < entityCount; ++i)
@@ -423,7 +424,6 @@ void PushTransformDataToShader(App* app)
         entity.localParamsSize = uniformBuffer.head - entity.localParamsOffset;
     }
     
-    BufferManagement::UnmapBuffer(uniformBuffer);
 }
 void PushLightDataToShader(App* app)
 {

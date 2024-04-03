@@ -6,17 +6,19 @@ layout(location = 2) in vec2 aTextCoord;
 //layout(location = 3) in vec3 aTangent;
 //layout(location = 4) in vec3 aBitangent;
 
+struct Light					
+{
+	uint type;			
+	vec3 color;					
+	vec3 direction;				
+	vec3 position;				
+};
+
 layout (binding = 0, std140) uniform GlobalParams
 {
 	vec3 uCameraPosition;     		
 	uint uLightCount; 	
-	struct Light					
-	{
-		uint type;			
-		vec3 color;					
-		vec3 direction;				
-		vec3 position;				
-	} uLight[16];     		   		
+	Light uLight[16];     		   		
 }; 
 
 layout(binding = 1, std140) uniform LocalParams
