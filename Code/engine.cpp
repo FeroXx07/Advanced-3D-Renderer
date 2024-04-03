@@ -107,6 +107,12 @@ void CameraGUI(App* app) {
 void OpenGLContextGUI(App* app) {
     ImGui::Checkbox("Show Demo Window", &app->showDemoWindow);
     ImGui::Checkbox("Draw Wireframe", &app->drawWireFrame);
+    ImGui::Checkbox("Debug UBO", &app->debugUBO);
+    
+    int renderingModeSelection = static_cast<int>(app->renderingMode);
+    ImGui::Combo("Rendering Mode", &renderingModeSelection, RenderingModeStr, IM_ARRAYSIZE(RenderingModeStr));
+    app->renderingMode = static_cast<RenderingMode>(renderingModeSelection);
+    
     ImGui::Separator();
     ImGui::Text("OpenGL Context");
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS:");
@@ -254,6 +260,17 @@ void Update(App* app)
 
 void Render(App* app)
 {
+    switch (app->renderingMode) {
+    case FORWARD:
+        ForwardRender(app);
+        break;
+    case DEFERRED:
+        DeferredRender(app);
+        break;
+    }
+}
+void ForwardRender(App* app)
+{
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
     glEnable(GL_DEPTH_TEST);
     
@@ -329,6 +346,7 @@ void Render(App* app)
     }
     glPopDebugGroup();
 }
+void DeferredRender(App* app) {}
 void CheckShadersHotReload(App* app)
 {
     for (u64 i = 0; i < app->programs.size(); ++i)
@@ -408,7 +426,7 @@ void CreateLight(App* app, LightType lightType, const glm::vec3& position, const
 void PushTransformDataToShader(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
-
+    
     const u64 entityCount = app->entities.size();
     for (u32 i = 0; i < entityCount; ++i)
     {
@@ -422,8 +440,13 @@ void PushTransformDataToShader(App* app)
         PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
 
         entity.localParamsSize = uniformBuffer.head - entity.localParamsOffset;
+
+        if (app->debugUBO)
+            std::cout << "Entity: " << entity.name.c_str() << ". Local Params Offset: " << entity.localParamsOffset << ". Local Params Size: " << entity.localParamsSize  << "\n";
     }
     
+    if (app->debugUBO)
+        std::cout << "\n";
 }
 void PushLightDataToShader(App* app)
 {
@@ -445,6 +468,9 @@ void PushLightDataToShader(App* app)
     }
 
     app->globalParamsSize = uniformBuffer.head - app->globalParamsOffset;
+
+    if (app->debugUBO)
+        std::cout << "Global Params. " << " Offset: " << app->globalParamsOffset << " Size: " << app->globalParamsSize  << "\n";
 }
 
 void VAOSupport::CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle)

@@ -63,14 +63,6 @@
     <ClInclude Include="ThirdParty\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="WorkingDir\shaders.glsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="WorkingDir\shaded.frag" />
-    <Content Include="WorkingDir\shaded.glsl" />
-    <Content Include="WorkingDir\shaded.vert" />
-    <Content Include="WorkingDir\shaders.frag" />
-    <Content Include="WorkingDir\shaders.vert" />
     <Content Include="WorkingDir\Shaders\shader_lit_base.frag" />
     <Content Include="WorkingDir\Shaders\shader_lit_base.vert" />
     <Content Include="WorkingDir\Shaders\shader_lit_textured.frag" />

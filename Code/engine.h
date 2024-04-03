@@ -14,6 +14,10 @@ void Update(App* app);
 
 void Render(App* app);
 
+void ForwardRender(App* app);
+
+void DeferredRender(App* app);
+
 void CheckShadersHotReload(App* app);
 
 void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,

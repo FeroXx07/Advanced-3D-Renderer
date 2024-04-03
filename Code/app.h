@@ -11,6 +11,13 @@
 #include "program.h"
 #include "texture.h"
 
+static const char* RenderingModeStr[] = {"FORWARD", "DEFERRED"};
+enum RenderingMode
+{
+    FORWARD,
+    DEFERRED
+};
+
 enum Mode
 {
     Mode_TexturedQuad,
@@ -30,7 +37,8 @@ struct App
     OpenGlContext ctx;
     ivec2 displaySize;
     bool drawWireFrame = false;
-
+    RenderingMode renderingMode = RenderingMode::FORWARD;
+    
     // Camera
     Camera camera;
     glm::mat4 projectionMat;
@@ -60,8 +68,10 @@ struct App
 
     // Location of the texture uniform in the textured quad shader
     GLuint defaultShaderProgram_uTexture;
-    
+
+    // Debug
     bool showDemoWindow = false;
+    bool debugUBO = true;
 };
 
 #endif // APP_H
