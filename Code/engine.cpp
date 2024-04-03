@@ -431,6 +431,7 @@ void PushTransformDataToShader(App* app)
     for (u32 i = 0; i < entityCount; ++i)
     {
         Entity& entity = *app->entities[i];
+
         BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
         entity.localParamsOffset = uniformBuffer.head;
 
@@ -439,6 +440,7 @@ void PushTransformDataToShader(App* app)
         entity.worldViewProjectionMat = app->projectionMat * app->camera.GetViewMatrix() * entity.worldMatrix;
         PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
 
+        BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
         entity.localParamsSize = uniformBuffer.head - entity.localParamsOffset;
 
         if (app->debugUBO)
