@@ -79,19 +79,19 @@ void Init(App* app)
         ,cubeModelIdx, litBaseProgramIdx, glm::vec4(1.0f), "Cube");
     CreateEntity(app, glm::vec3(-4.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
         ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    // CreateEntity(app, glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-    //     ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    // CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-    //     ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    // CreateEntity(app, glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
-    //    ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+     CreateEntity(app, glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+         ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+     CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+         ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+     CreateEntity(app, glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     
-    // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
-    //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
+     CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
+         ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
     CreateLight(app, LightType::POINT, glm::vec3(1.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
        ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Point Light");
-    /*CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
-       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");*/
+    CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
+       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
     
     app->camera.position = glm::vec3(-1.0f, 1.0f, 8.0f);
 
@@ -130,6 +130,14 @@ void OpenGLContextGUI(App* app) {
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "OpenGL GLSL version:");
     ImGui::SameLine();
     ImGui::Text("%s", app->ctx.glslVersion.c_str());
+
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Uniform Buffer max size:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(BufferManagement::maxUniformBufferSize).c_str());
+
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Uniform Buffer block alignment:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(BufferManagement::uniformBlockAlignment).c_str());
 }
 void EntityHierarchyGUI(const App* app)
 {
@@ -460,7 +468,7 @@ void PushLightDataToShader(App* app)
     PUSH_U_INT(uniformBuffer, lightsCount);
     for (u32 i = 0; i < lightsCount; ++i)
     {
-        BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
+        BufferManagement::AlignHead(uniformBuffer, 4 * BASIC_MACHINE_UNIT);
 
         const Light& light = *app->lights[i];
         PUSH_U_INT(uniformBuffer, (u32)light.type);
