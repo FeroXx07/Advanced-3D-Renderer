@@ -28,6 +28,9 @@
 								// 16				// 112			// 112
 								// 16				// 128			// 128
 	}
+	
+	Each block has to be aligned to GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT that can be 16 bytes or 256 bytes depending on the GPU vendor.
+	But each datatype base alignment stays the same for each type independently of the block alignment.
 
 	/*OpenGL Khronos examples*/
 	/*https://registry.khronos.org/OpenGL/extensions/ARB/ARB_uniform_buffer_object.txt*/
