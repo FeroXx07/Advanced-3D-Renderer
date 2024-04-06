@@ -10,6 +10,7 @@
 #include "engine.h"
 #include <imgui.h>
 #include <iostream>
+
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -73,28 +74,27 @@ void Init(App* app)
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
     
-    CreateEntity(app, glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    CreateEntity(app, glm::vec3(-2.0f, -3.5f, 0.0f), glm::vec3(0.0f),glm::vec3(3.0f)
         ,sampleMeshModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
-    CreateEntity(app, glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,cubeModelIdx, litBaseProgramIdx, glm::vec4(1.0f), "Cube");
-    CreateEntity(app, glm::vec3(-4.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+    CreateEntity(app, glm::vec3(-12.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-     CreateEntity(app, glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+     CreateEntity(app, glm::vec3(-6.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
          ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-     CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+     CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
          ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-     CreateEntity(app, glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+     CreateEntity(app, glm::vec3(6.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     
-     CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
-         ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
-    CreateLight(app, LightType::POINT, glm::vec3(1.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
-       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Point Light");
-    CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
-       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
+    // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
+     //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
+    CreateLight(app, LightType::POINT, glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
+       ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light");
+    // CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
+    //    ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
     
-    app->camera.position = glm::vec3(-1.0f, 1.0f, 8.0f);
-
+    app->camera.position = glm::vec3(-3.0f, 1.0f, 25.0f);
     //PushTransformDataToShader(app);
 }
 
@@ -138,6 +138,7 @@ void OpenGLContextGUI(App* app) {
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Uniform Buffer block alignment:");
     ImGui::SameLine();
     ImGui::Text("%s", std::to_string(BufferManagement::uniformBlockAlignment).c_str());
+    
 }
 void EntityHierarchyGUI(const App* app)
 {
@@ -171,16 +172,17 @@ void EntityTransformGUI(App* app)
         glm::quat orientation;
         glm::decompose(app->entities[selectedEntity]->worldMatrix, entity.scale, orientation, entity.position, skew, perspective);
         glm::vec3 eulerAnglesOrientation = glm::degrees(glm::eulerAngles(orientation));
-        
+
+        constexpr ImGuiInputTextFlags inputTextFlags =  ImGuiInputTextFlags_EnterReturnsTrue;
         // Modify values
         bool valueChanged = false;
-        if (ImGui::InputFloat3("Translation", glm::value_ptr(entity.position))
+        if (ImGui::InputFloat3("Translation", glm::value_ptr(entity.position), "%.3f")
             || ImGui::InputFloat3("Orientation Euler", glm::value_ptr(eulerAnglesOrientation), "%.3f")
             || ImGui::InputFloat4("Orientation Quat", glm::value_ptr(entity.orientationQuat), "%.3f", ImGuiInputTextFlags_ReadOnly)
-            || ImGui::InputFloat3("Scale", glm::value_ptr(entity.scale)))
+            || ImGui::InputFloat3("Scale", glm::value_ptr(entity.scale), "%.3f"))
             valueChanged = true;
         
-        if (valueChanged && !ImGui::IsItemActive())
+        if (valueChanged )
         {
             // Update the entity's orientation quaternion and Euler angles
             entity.orientationQuat = glm::quat(glm::radians(eulerAnglesOrientation));
@@ -398,7 +400,7 @@ void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientat
     entity->worldMatrix = glm::translate(entity->worldMatrix, entity->position);
     entity->worldMatrix *= glm::toMat4(entity->orientationQuat);
     entity->worldMatrix = glm::scale(entity->worldMatrix, entity->scale);
-
+    
     entity->modelIndex = modelIndex;
     entity->color = diffuseColor;
     entity->programIndex = programIdx;
@@ -440,14 +442,19 @@ void PushTransformDataToShader(App* app)
     {
         Entity& entity = *app->entities[i];
 
+        // Calculate MVP and Normal Matrix for the lightning
+        glm::mat4 ModelViewMat = app->camera.GetViewMatrix() * entity.worldMatrix;
+        entity.worldViewProjectionMat = app->projectionMat * ModelViewMat;
+        entity.normalMatrix = glm::mat3(glm::transpose(glm::inverse(ModelViewMat)));
+        
         BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
         entity.localParamsOffset = uniformBuffer.head;
 
         PUSH_VEC4(uniformBuffer, entity.color);
         PUSH_MAT4(uniformBuffer, entity.worldMatrix);
-        entity.worldViewProjectionMat = app->projectionMat * app->camera.GetViewMatrix() * entity.worldMatrix;
         PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
-
+        PUSH_MAT4(uniformBuffer, entity.normalMatrix);
+        
         BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
         entity.localParamsSize = uniformBuffer.head - entity.localParamsOffset;
 

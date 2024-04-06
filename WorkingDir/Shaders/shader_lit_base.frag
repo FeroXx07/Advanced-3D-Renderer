@@ -27,6 +27,7 @@ layout(binding = 1, std140) uniform LocalParams
 	vec4 uColor;
 	mat4 uWorldMatrix;
 	mat4 uWorldViewProjectionMatrix;
+	mat3 uNormalMatrix;
 };
 
 layout(location = 0) out vec4 oColor;

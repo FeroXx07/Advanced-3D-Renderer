@@ -19,13 +19,14 @@ layout (binding = 0, std140) uniform GlobalParams
 	vec3 uCameraPosition;     		
 	uint uLightCount; 	
 	Light uLight[16];     		   		
-}; 
+};
 
 layout(binding = 1, std140) uniform LocalParams
 {
 	vec4 uColor;
 	mat4 uWorldMatrix;
 	mat4 uWorldViewProjectionMatrix;
+	mat3 uNormalMatrix;
 };
 
 // Can use the same locations for out and in because the belong the different stages in the pipeline.
@@ -37,8 +38,9 @@ layout(location = 5) out vec3 vViewDir; // In worldspace
 void main() {
     vTextCoord = aTextCoord;
 	vPosition = vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	 // Homogenous coordinate 0.0 because we don't want to translate the normal vector.
-	vNormal = vec3(uWorldMatrix * vec4(aNormal, 0.0));
+	// Homogenous coordinate 0.0 because we don't want to translate the normal vector.
+	//vNormal = normalize(vec3(uNormalMatrix * aNormal));  // For scaling modify normals but remove translation.
+	vNormal = normalize(vec3(uWorldMatrix * vec4(aNormal, 0.0)));
 	vViewDir = uCameraPosition - vPosition;
 	gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);
 }

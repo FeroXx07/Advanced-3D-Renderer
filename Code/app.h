@@ -71,7 +71,7 @@ struct App
 
     // Debug
     bool showDemoWindow = false;
-    bool debugUBO = true;
+    bool debugUBO = false;
 };
 
 #endif // APP_H

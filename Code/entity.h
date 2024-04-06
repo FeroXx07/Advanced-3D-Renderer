@@ -17,6 +17,7 @@ struct Entity
     
     glm::mat4 worldMatrix;
     glm::mat4 worldViewProjectionMat;
+    glm::mat3 normalMatrix;
     
     glm::vec3 position;
     glm::vec3 orientationEuler;
