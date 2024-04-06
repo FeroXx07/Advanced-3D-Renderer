@@ -35,6 +35,10 @@ public:
     static void UnmapBuffer(const Buffer& buffer);
     static void AlignHead(Buffer& buffer, u32 alignment);
     static void PushAlignedData(Buffer& buffer, const void* data, u32 size, u32 alignment);
+    
+    static void SetBufferBlockStart(Buffer& buffer, const u32 alignment, u32& offset);
+    static void SetBufferBlockEnd(Buffer& buffer, const u32 alignment, u32& size, const u32& offset);
+    
     static void InitUniformBuffer();
 
     static void BindBufferRange(const Buffer& buffer, const u32 bindingPoint, const u32 blockSize, const u32 blockOffset);

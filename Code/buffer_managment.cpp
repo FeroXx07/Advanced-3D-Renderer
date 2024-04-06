@@ -69,6 +69,16 @@ void BufferManagement::PushAlignedData(Buffer& buffer, const void* data, const u
     memcpy((u8*)buffer.data + buffer.head, data, size);
     buffer.head += size;
 }
+void BufferManagement::SetBufferBlockStart(Buffer& buffer, const u32 alignment, u32& offset)
+{
+    AlignHead(buffer, alignment);
+    offset = buffer.head;
+}
+void BufferManagement::SetBufferBlockEnd(Buffer& buffer, const u32 alignment, u32& size, const u32& offset)
+{
+    AlignHead(buffer, alignment);
+    size = buffer.head - offset;
+}
 void BufferManagement::InitUniformBuffer()
 {
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
