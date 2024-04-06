@@ -447,16 +447,14 @@ void PushTransformDataToShader(App* app)
         entity.worldViewProjectionMat = app->projectionMat * ModelViewMat;
         entity.normalMatrix = glm::mat3(glm::transpose(glm::inverse(ModelViewMat)));
         
-        BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
-        entity.localParamsOffset = uniformBuffer.head;
+        BufferManagement::SetBufferBlockStart(uniformBuffer, BufferManagement::uniformBlockAlignment, entity.localParamsOffset);
 
         PUSH_VEC4(uniformBuffer, entity.color);
         PUSH_MAT4(uniformBuffer, entity.worldMatrix);
         PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
         PUSH_MAT4(uniformBuffer, entity.normalMatrix);
         
-        BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
-        entity.localParamsSize = uniformBuffer.head - entity.localParamsOffset;
+        BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, entity.localParamsSize, entity.localParamsOffset);
 
         if (app->debugUBO)
             std::cout << "Entity: " << entity.name.c_str() << ". Local Params Offset: " << entity.localParamsOffset << ". Local Params Size: " << entity.localParamsSize  << "\n";
@@ -469,7 +467,8 @@ void PushLightDataToShader(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
     
-    app->globalParamsOffset = uniformBuffer.head;
+    BufferManagement::SetBufferBlockStart(uniformBuffer, BufferManagement::uniformBlockAlignment, app->globalParamsOffset);
+    
     const u32 lightsCount = (u32)app->lights.size();
     PUSH_VEC3(uniformBuffer, app->camera.position);
     PUSH_U_INT(uniformBuffer, lightsCount);
@@ -484,8 +483,7 @@ void PushLightDataToShader(App* app)
         PUSH_VEC3(uniformBuffer, light.position);
     }
     
-    BufferManagement::AlignHead(uniformBuffer, BufferManagement::uniformBlockAlignment);
-    app->globalParamsSize = uniformBuffer.head - app->globalParamsOffset;
+    BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, app->globalParamsSize, app->globalParamsOffset);
 
     if (app->debugUBO)
         std::cout << "Global Params. " << " Offset: " << app->globalParamsOffset << " Size: " << app->globalParamsSize  << "\n";
