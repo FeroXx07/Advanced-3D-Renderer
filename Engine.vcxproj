@@ -33,6 +33,11 @@
     <ClCompile Include="ThirdParty\imgui-docking\imgui_impl_opengl3.cpp" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui_widgets.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\GraphEditor.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImCurveEdit.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImGradient.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImGuizmo.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImSequencer.cpp" />
     <ClCompile Include="ThirdParty\stb\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +65,12 @@
     <ClInclude Include="ThirdParty\imgui-docking\imstb_rectpack.h" />
     <ClInclude Include="ThirdParty\imgui-docking\imstb_textedit.h" />
     <ClInclude Include="ThirdParty\imgui-docking\imstb_truetype.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\GraphEditor.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImCurveEdit.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImGradient.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImGuizmo.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImSequencer.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImZoomSlider.h" />
     <ClInclude Include="ThirdParty\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
@@ -170,7 +181,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\ThirdParty\glfw\include;$(ProjectDir)\ThirdParty\glad\include;$(ProjectDir)\ThirdParty\glm\include;$(ProjectDir)\ThirdParty\imgui-docking;$(ProjectDir)\ThirdParty\stb;$(ProjectDir)\ThirdParty\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\ThirdParty\glfw\include;$(ProjectDir)\ThirdParty\glad\include;$(ProjectDir)\ThirdParty\glm\include;$(ProjectDir)\ThirdParty\imgui-docking;$(ProjectDir)\ThirdParty\stb;$(ProjectDir)\ThirdParty\Assimp\include;$(ProjectDir)\ThirdParty\imguizmo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -187,7 +198,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\ThirdParty\glfw\include;$(ProjectDir)\ThirdParty\glad\include;$(ProjectDir)\ThirdParty\glm\include;$(ProjectDir)\ThirdParty\imgui-docking;$(ProjectDir)\ThirdParty\stb;$(ProjectDir)\ThirdParty\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\ThirdParty\glfw\include;$(ProjectDir)\ThirdParty\glad\include;$(ProjectDir)\ThirdParty\glm\include;$(ProjectDir)\ThirdParty\imgui-docking;$(ProjectDir)\ThirdParty\stb;$(ProjectDir)\ThirdParty\Assimp\include;$(ProjectDir)\ThirdParty\imguizmo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

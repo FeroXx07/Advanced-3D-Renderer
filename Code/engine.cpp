@@ -219,7 +219,6 @@ void Gui(App* app)
     ImGui::Separator();
     EntityTransformGUI(app);
     ImGui::Separator();
-    //LightTransformGUI(app);
     u32& itemCurrentIdx = app->entities[selectedEntity]->programIndex;                    // Here our selection data is an index.
     const char* comboLabel = app->programs[itemCurrentIdx].programName.c_str();  // Label to preview before opening the combo (technically it could be anything)
     if (ImGui::BeginCombo("Active program", comboLabel))
@@ -238,7 +237,6 @@ void Gui(App* app)
     }
     ImGui::Separator();
     EntityHierarchyGUI(app);
-    //LightHierarchyGUI(app);
     ImGui::End();
 }
 
@@ -259,7 +257,7 @@ void Update(App* app)
         camera.ProcessMouseMovement(app->input.mouseDelta.x, -app->input.mouseDelta.y);
     
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
-    
+
     CheckShadersHotReload(app);
     Buffer& uniformBuffer = app->uniformBuffer;
     BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
