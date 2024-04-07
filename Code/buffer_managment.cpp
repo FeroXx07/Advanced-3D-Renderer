@@ -84,6 +84,21 @@ void BufferManagement::InitUniformBuffer()
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniformBlockAlignment);
 }
+void BufferManagement::DeleteBuffer(const Buffer& buffer)
+{
+    if (buffer.type == GL_ELEMENT_ARRAY_BUFFER || buffer.type == GL_ARRAY_BUFFER || buffer.type == GL_UNIFORM_BUFFER)
+    {
+        glDeleteBuffers(1, &buffer.handle);
+    }
+    else if (buffer.type == GL_FRAMEBUFFER)
+    {
+        glDeleteFramebuffers(1, &buffer.handle);
+    }
+    else if (buffer.type == GL_RENDERBUFFER)
+    {
+        glDeleteRenderbuffers(1, &buffer.handle);
+    }
+}
 void BufferManagement::BindBufferRange(const Buffer& buffer, const u32 bindingPoint = 0, const u32 blockSize = 0, const u32 blockOffset = 0)
 {
     ASSERT(IsMultipleOf(blockSize, BufferManagement::uniformBlockAlignment), "The size must be multiple of uniform block alignment");

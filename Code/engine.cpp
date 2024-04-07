@@ -162,7 +162,7 @@ void EntityHierarchyGUI(const App* app)
             if (isSelected)
                 nodeFlags |= ImGuiTreeNodeFlags_Selected;
             nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-            ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %d", app->entities[i]->name.c_str(), i);
+            ImGui::TreeNodeEx((void*)(intptr_t)i, nodeFlags, "%s %d", app->entities[i]->name.c_str(), i);  // NOLINT(performance-no-int-to-ptr)
             if (ImGui::IsItemClicked())
                 selectedEntity = i;
         }
@@ -176,11 +176,11 @@ void EntityTransformGUI(App* app)
     if (app->entities[selectedEntity])
     {
         Entity& entity = *app->entities[selectedEntity];
-        EditTransform(app, glm::value_ptr(app->camera.GetViewMatrix()), glm::value_ptr(app->projectionMat), glm::value_ptr(app->entities[selectedEntity]->worldMatrix), 100.f);
+        EditTransform(app, glm::value_ptr(app->camera.GetViewMatrix()), glm::value_ptr(app->projectionMat), glm::value_ptr(entity.worldMatrix), true);
     }
 }
 
-void ProgramsGUI(App* app) {
+void ProgramsGUI(const App* app) {
     u32& itemCurrentIdx = app->entities[selectedEntity]->programIndex;                    // Here our selection data is an index.
     const char* comboLabel = app->programs[itemCurrentIdx].programName.c_str();  // Label to preview before opening the combo (technically it could be anything)
     if (ImGui::BeginCombo("Active program", comboLabel))
@@ -322,9 +322,9 @@ void ForwardRender(App* app)
 
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, app->textures[subMeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i(app->defaultShaderProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
+                    glUniform1i((GLint)app->defaultShaderProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
 
-                    glDrawElements(GL_TRIANGLES, static_cast<u32>(subMesh.indices.size()), GL_UNSIGNED_INT, (void*)static_cast<u64>(subMesh.indexOffset));
+                    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(subMesh.indices.size()), GL_UNSIGNED_INT, (void*)static_cast<u64>(subMesh.indexOffset));
                     glPopDebugGroup();
                 }
                 glPopDebugGroup();
@@ -454,14 +454,14 @@ void PushLightDataToShader(App* app)
     
     const u32 lightsCount = (u32)app->lights.size();
     PUSH_VEC3(uniformBuffer, app->camera.position);
-    PUSH_U_INT(uniformBuffer, lightsCount);
+    PUSH_U_INT(uniformBuffer, lightsCount)
     for (u32 i = 0; i < lightsCount; ++i)
     {
         // Correct if necessary the alignment of array 
         BufferManagement::AlignHead(uniformBuffer, 4 * BASIC_MACHINE_UNIT);
 
         const Light& light = *app->lights[i];
-        PUSH_U_INT(uniformBuffer, (u32)light.type);
+        PUSH_U_INT(uniformBuffer, (u32)light.type)
         PUSH_VEC3(uniformBuffer, light.color);
         PUSH_VEC3(uniformBuffer, light.orientationEuler);
         PUSH_VEC3(uniformBuffer, light.position);
@@ -552,9 +552,9 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
     const ImGuiIO& io = ImGui::GetIO();
     float viewManipulateRight = io.DisplaySize.x;
     float viewManipulateTop = 0;
-    ImGuizmo::SetRect(app->displayPos.x, app->displayPos.y, app->displaySize.x, app->displaySize.y);
+    ImGuizmo::SetRect((float)app->displayPos.x, (float)app->displayPos.y, (float)app->displaySize.x, (float)app->displaySize.y);
     //ImGuizmo::DrawGrid(cameraView, glm::value_ptr(app->projectionMat), glm::value_ptr(glm::mat4(1.0f)), 100.f);
-    ImGuizmo::Manipulate(cameraView, glm::value_ptr(app->projectionMat), app->imGuizmoData.mCurrentGizmoOperation, app->imGuizmoData.mCurrentGizmoMode, glm::value_ptr(app->entities[selectedEntity]->worldMatrix), NULL, app->imGuizmoData.useSnap ? &app->imGuizmoData.snap[0] : NULL, app->imGuizmoData.boundSizing ? app->imGuizmoData.bounds : NULL, app->imGuizmoData.boundSizingSnap ? app->imGuizmoData.boundsSnap : NULL);
+    ImGuizmo::Manipulate(cameraView, glm::value_ptr(app->projectionMat), app->imGuizmoData.mCurrentGizmoOperation, app->imGuizmoData.mCurrentGizmoMode, glm::value_ptr(app->entities[selectedEntity]->worldMatrix), nullptr, app->imGuizmoData.useSnap ? &app->imGuizmoData.snap[0] : nullptr, app->imGuizmoData.boundSizing ? app->imGuizmoData.bounds : nullptr, app->imGuizmoData.boundSizingSnap ? app->imGuizmoData.boundsSnap : nullptr);
 
     //ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
 }
@@ -585,7 +585,7 @@ void VAOSupport::CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Pr
                 // Since it shares the same buffers in the mesh it will use its corresponding array rang with vertex offset here, and indices offset when glDrawElements
                 const u32 offset = subMesh.vertexBufferLayout.attributes[j].offset + subMesh.vertexOffset; // attribute offset + vertex offset
                 const u32 stride = subMesh.vertexBufferLayout.stride;
-                glVertexAttribPointer(index, nComp, GL_FLOAT, GL_FALSE, stride, (void*)(u64)offset);
+                glVertexAttribPointer(index, (GLsizei)nComp, GL_FLOAT, GL_FALSE, (GLsizei)stride, (void*)(u64)offset);
                 glEnableVertexAttribArray(index);
 
                 attributeWasLinked = true;

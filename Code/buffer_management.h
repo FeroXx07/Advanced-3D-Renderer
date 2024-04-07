@@ -10,22 +10,6 @@ struct Buffer
     {
     }
     
-    ~Buffer()
-    {
-        if (type == GL_ELEMENT_ARRAY_BUFFER || type == GL_ARRAY_BUFFER || type == GL_UNIFORM_BUFFER)
-        {
-            glDeleteBuffers(1, &handle);
-        }
-        else if (type == GL_FRAMEBUFFER)
-        {
-            glDeleteFramebuffers(1, &handle);
-        }
-        else if (type == GL_RENDERBUFFER)
-        {
-            glDeleteRenderbuffers(1, &handle);
-        }
-    }
-    
     u32 size;
     GLenum type;
     GLuint handle;
@@ -56,7 +40,8 @@ public:
     static void SetBufferBlockEnd(Buffer& buffer, const u32 alignment, u32& size, const u32& offset);
     
     static void InitUniformBuffer();
-
+    static void DeleteBuffer(const Buffer& buffer);
+    
     static void BindBufferRange(const Buffer& buffer, const u32 bindingPoint, const u32 blockSize, const u32 blockOffset);
     
     static GLint maxUniformBufferSize;
