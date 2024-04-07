@@ -30,7 +30,19 @@ void Init(App* app)
     app->ctx = RetrieveOpenGLContext();
     constexpr glm::mat4 identityMat = glm::identity<glm::mat4>();
     BufferManagement::InitUniformBuffer();
+
+    // Create uniform buffer
     app->uniformBuffer = CREATE_CONSTANT_BUFFER(BufferManagement::maxUniformBufferSize, nullptr);
+
+    // Create frame buffer and a color texture attachment
+    app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
+    app->colorTexture = TextureSupport::CreateEmptyColorTexture(app->displaySize.x, app->displaySize.y);
+    FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->colorTexture.handle, 0);
+    FrameBufferManagement::CheckStatus();
+    const std::vector<u32> attachments = {0};
+    FrameBufferManagement::SetDrawBuffersTextures(attachments);
+    FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     
     // Camera & View init
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);

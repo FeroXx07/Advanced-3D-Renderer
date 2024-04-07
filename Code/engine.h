@@ -37,7 +37,6 @@ struct VAOSupport
 };
 
 static i32 selectedEntity = 0;
-
-static void EditTransform(App* app, const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition);
+void EditTransform(App* app, const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition);
 
 

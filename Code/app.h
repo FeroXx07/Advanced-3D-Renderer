@@ -76,6 +76,9 @@ struct App
 
     // Buffers
     Buffer uniformBuffer;
+    Buffer frameBufferObject;
+    Texture colorTexture;
+    
     u32 globalParamsOffset = 0;
     u32 globalParamsSize = 0;
     

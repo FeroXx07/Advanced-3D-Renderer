@@ -1,6 +1,9 @@
 ﻿#ifndef BUFFER_MANAGEMENT_H
 #define BUFFER_MANAGEMENT_H
+#include <vector>
+
 #include "platform.h"
+#include "texture.h"
 
 #define BASIC_MACHINE_UNIT 4
 
@@ -21,31 +24,51 @@ struct Buffer
 class BufferManagement
 {
 public:
+    // Helpers for assertions
     static bool IsPowerOf2(const u32 value);
     static bool IsMultipleOf(const u32 value, const u32 divider);
     
     // Rounds down the adjusted value to the nearest multiple of the alignment boundary
     static u32 Align(u32 value, u32 alignment);
     static Buffer CreateBuffer(const u32 size, const GLenum type, const GLenum usage, void* data);
-    
+
+    // Binding and unbinding of buffers
     static void BindBuffer(const Buffer& buffer);
     static void UnBindBuffer(const Buffer& buffer);
-    
+    static void BindBufferRange(const Buffer& buffer, const u32 bindingPoint, const u32 blockSize, const u32 blockOffset);
+
+    // Mapping and unmapping of buffers for data insertion
     static void MapBuffer(Buffer& buffer, GLenum access);
     static void UnmapBuffer(const Buffer& buffer);
     static void AlignHead(Buffer& buffer, u32 alignment);
     static void PushAlignedData(Buffer& buffer, const void* data, u32 size, u32 alignment);
-    
+
+    // Alignment of buffer blocks
     static void SetBufferBlockStart(Buffer& buffer, const u32 alignment, u32& offset);
     static void SetBufferBlockEnd(Buffer& buffer, const u32 alignment, u32& size, const u32& offset);
-    
+
+    // Init and destroy of buffers
     static void InitUniformBuffer();
     static void DeleteBuffer(const Buffer& buffer);
-    
-    static void BindBufferRange(const Buffer& buffer, const u32 bindingPoint, const u32 blockSize, const u32 blockOffset);
-    
+
+    // Global info on GLSL config
     static GLint maxUniformBufferSize;
     static GLint uniformBlockAlignment;
+};
+
+class FrameBufferManagement
+{
+public:
+    static Buffer CreateFrameBuffer();
+    static void DeleteFrameBuffer(const Buffer& buffer);
+
+    static void BindFrameBuffer(const Buffer& buffer);
+    static void UnBindFrameBuffer(const Buffer& buffer);
+
+    static void SetColorAttachment(const Buffer& buffer, const GLint colorTexture, const GLuint layoutLocation);
+    static void SetDrawBuffersTextures(const std::vector<u32>& activeAttachments);
+
+    static bool CheckStatus();
 };
 
 #define CREATE_CONSTANT_BUFFER(size, data) BufferManagement::CreateBuffer(size, GL_UNIFORM_BUFFER, GL_STREAM_DRAW, data)

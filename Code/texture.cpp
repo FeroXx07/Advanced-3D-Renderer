@@ -55,7 +55,7 @@ GLuint TextureSupport::CreateTexture2DFromImage(const Image& image)
 u32 TextureSupport::LoadTexture2D(App* app, const char* filepath)
 {
     for (u32 texIdx = 0; texIdx < app->textures.size(); ++texIdx)
-        if (app->textures[texIdx].filepath == filepath)
+        if (app->textures[texIdx].path == filepath)
             return texIdx;
 
     Image image = LoadImage(filepath);
@@ -64,7 +64,7 @@ u32 TextureSupport::LoadTexture2D(App* app, const char* filepath)
     {
         Texture tex = {};
         tex.handle = CreateTexture2DFromImage(image);
-        tex.filepath = filepath;
+        tex.path = filepath;
 
         const u32 texIdx = (u32)app->textures.size();
         app->textures.push_back(tex);
@@ -76,4 +76,39 @@ u32 TextureSupport::LoadTexture2D(App* app, const char* filepath)
     {
         return UINT32_MAX;
     }
+}
+Texture TextureSupport::CreateEmptyColorTexture(const u32 width, const u32 height)
+{
+    Texture tex = {};
+    tex.path = "MEMORY";
+    
+    glGenTextures(1, &tex.handle);
+    glBindTexture(GL_TEXTURE_2D, tex.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return tex;
+}
+
+Texture TextureSupport::CreateEmptyDepthTexture(const u32 width, const u32 height)
+{
+    Texture tex = {};
+    tex.path = "MEMORY";
+    
+    glGenTextures(1, &tex.handle);
+    glBindTexture(GL_TEXTURE_2D, tex.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return tex;
 }
