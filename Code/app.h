@@ -10,6 +10,7 @@
 #include "mesh.h"
 #include "program.h"
 #include "texture.h"
+#include "ImGuizmo.h"
 
 static const char* RenderingModeStr[] = {"FORWARD", "DEFERRED"};
 enum RenderingMode
@@ -24,6 +25,19 @@ enum Mode
     Mode_Count
 };
 
+struct ImGuizmoData 
+{
+    bool useSnap = false;
+    float snap[3] = { 1.f, 1.f, 1.f };
+    float bounds[6] = { -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f };
+    float boundsSnap[3] = { 0.1f, 0.1f, 0.1f };
+    bool boundSizing = false;
+    bool boundSizingSnap = false;
+
+    ImGuizmo::OPERATION mCurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+    ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::MODE::LOCAL;
+};
+
 struct App
 {
     // Loop
@@ -36,6 +50,8 @@ struct App
     // Graphics
     OpenGlContext ctx;
     ivec2 displaySize;
+    ivec2 displayPos;
+
     bool drawWireFrame = false;
     RenderingMode renderingMode = RenderingMode::FORWARD;
     
@@ -72,6 +88,9 @@ struct App
     // Debug
     bool showDemoWindow = false;
     bool debugUBO = false;
+
+    // ImGuizmo
+    ImGuizmoData imGuizmoData;
 };
 
 #endif // APP_H

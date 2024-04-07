@@ -21,6 +21,8 @@
 #include "texture.h"
 #include "vertex.h"
 
+#include "ImGuizmo.h"
+
 
 void Init(App* app)
 {
@@ -166,8 +168,9 @@ void EntityTransformGUI(App* app)
     if (app->entities[selectedEntity])
     {
         Entity& entity = *app->entities[selectedEntity];
+        EditTransform(app, glm::value_ptr(app->camera.GetViewMatrix()), glm::value_ptr(app->projectionMat), glm::value_ptr(app->entities[selectedEntity]->worldMatrix), 100.f);
         // Decompose model matrix
-        glm::vec3 skew;
+        /*glm::vec3 skew;
         glm::vec4 perspective;
         glm::quat orientation;
         glm::decompose(app->entities[selectedEntity]->worldMatrix, entity.scale, orientation, entity.position, skew, perspective);
@@ -203,7 +206,7 @@ void EntityTransformGUI(App* app)
         constexpr bool alphaHalfPreview = false;
         constexpr bool optionsMenu = true;
         constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
-        ImGui::ColorEdit4("ObjectColor##2", (float*)&app->entities[selectedEntity]->color[0], miscFlags);
+        ImGui::ColorEdit4("ObjectColor##2", (float*)&app->entities[selectedEntity]->color[0], miscFlags);*/
     }
 }
 
@@ -258,6 +261,7 @@ void Update(App* app)
     
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
 
+
     CheckShadersHotReload(app);
     Buffer& uniformBuffer = app->uniformBuffer;
     BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
@@ -277,6 +281,7 @@ void Render(App* app)
         break;
     }
 }
+  
 void ForwardRender(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
@@ -485,6 +490,78 @@ void PushLightDataToShader(App* app)
 
     if (app->debugUBO)
         std::cout << "Global Params. " << " Offset: " << app->globalParamsOffset << " Size: " << app->globalParamsSize  << "\n";
+}
+
+
+void EditTransform(App* app, const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition)
+{
+    if (editTransformDecomposition)
+    {
+        if (app->input.keys[K_1] == BUTTON_PRESS)
+            app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+        if (app->input.keys[K_2] == BUTTON_PRESS)
+            app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::ROTATE;
+        if (app->input.keys[K_3] == BUTTON_PRESS) 
+            app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::SCALE;
+        if (ImGui::RadioButton("Translate", app->imGuizmoData.mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+            app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Rotate", app->imGuizmoData.mCurrentGizmoOperation == ImGuizmo::ROTATE))
+            app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::ROTATE;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Scale", app->imGuizmoData.mCurrentGizmoOperation == ImGuizmo::SCALE))
+            app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::SCALE;
+        float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+        ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
+        ImGui::InputFloat3("Translate", matrixTranslation);
+        ImGui::InputFloat3("Rotate", matrixRotation);
+        ImGui::InputFloat3("Scale", matrixScale);
+        ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
+
+        if (app->imGuizmoData.mCurrentGizmoOperation != ImGuizmo::SCALE)
+        {
+            if (ImGui::RadioButton("Local", app->imGuizmoData.mCurrentGizmoMode == ImGuizmo::LOCAL))
+                app->imGuizmoData.mCurrentGizmoMode = ImGuizmo::LOCAL;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("World", app->imGuizmoData.mCurrentGizmoMode == ImGuizmo::WORLD))
+                app->imGuizmoData.mCurrentGizmoMode = ImGuizmo::WORLD;
+        }
+        if (app->input.keys[K_4] == BUTTON_PRESS)
+            app->imGuizmoData.useSnap = !app->imGuizmoData.useSnap;
+        ImGui::Checkbox("Use Snap", &app->imGuizmoData.useSnap);
+        ImGui::SameLine();
+
+        switch (app->imGuizmoData.mCurrentGizmoOperation)
+        {
+        case ImGuizmo::TRANSLATE:
+            ImGui::InputFloat3("Snap", &app->imGuizmoData.snap[0]);
+            break;
+        case ImGuizmo::ROTATE:
+            ImGui::InputFloat("Angle Snap", &app->imGuizmoData.snap[0]);
+            break;
+        case ImGuizmo::SCALE:
+            ImGui::InputFloat("Scale Snap", &app->imGuizmoData.snap[0]);
+            break;
+        }
+        ImGui::Checkbox("Bound Sizing", &app->imGuizmoData.boundSizing);
+        if (app->imGuizmoData.boundSizing)
+        {
+            ImGui::PushID(3);
+            ImGui::Checkbox("Bound Sizing Snap", &app->imGuizmoData.boundSizingSnap);
+            ImGui::SameLine();
+            ImGui::InputFloat3("Snap", app->imGuizmoData.boundsSnap);
+            ImGui::PopID();
+        }
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+    float viewManipulateRight = io.DisplaySize.x;
+    float viewManipulateTop = 0;
+    ImGuizmo::SetRect(app->displayPos.x, app->displayPos.y, app->displaySize.x, app->displaySize.y);
+    //ImGuizmo::DrawGrid(cameraView, glm::value_ptr(app->projectionMat), glm::value_ptr(glm::mat4(1.0f)), 100.f);
+    ImGuizmo::Manipulate(cameraView, glm::value_ptr(app->projectionMat), app->imGuizmoData.mCurrentGizmoOperation, app->imGuizmoData.mCurrentGizmoMode, glm::value_ptr(app->entities[selectedEntity]->worldMatrix), NULL, app->imGuizmoData.useSnap ? &app->imGuizmoData.snap[0] : NULL, app->imGuizmoData.boundSizing ? app->imGuizmoData.bounds : NULL, app->imGuizmoData.boundSizingSnap ? app->imGuizmoData.boundsSnap : NULL);
+
+    //ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
 }
 
 void VAOSupport::CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle)

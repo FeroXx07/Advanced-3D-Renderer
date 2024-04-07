@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include "errors_support.h"
+#include <ImGuizmo.h>
 
 #define WINDOW_TITLE  "Advanced Graphics Programming"
 #define WINDOW_WIDTH  800
@@ -130,6 +131,12 @@ void OnGlfwCloseWindow(GLFWwindow* window)
     app->isRunning = false;
 }
 
+void OnGlfwSetWindowPos(GLFWwindow* window, int xpos, int ypos)
+{
+    App* app = (App*)glfwGetWindowUserPointer(window);
+    app->displayPos = vec2(glm::max(xpos, 0), glm::max(ypos, 0));
+}
+
 int main()
 {
     App app         = {};
@@ -149,13 +156,33 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
+
+    // Create a centered window
+    int count;
+    int windowWidth, windowHeight;
+    int monitorX, monitorY;
+    GLFWmonitor** monitors = glfwGetMonitors(&count);
+    const GLFWvidmode* videoMode = glfwGetVideoMode(monitors[0]);
+    windowWidth = videoMode->width / 1.5;
+    windowHeight = windowWidth / 16 * 9;
+    glfwGetMonitorPos(monitors[0], &monitorX, &monitorY);
+    // Set the visibility window hint to false for subsequent window creation
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL, NULL);
     if (!window)
     {
         ELOG("glfwCreateWindow() failed\n");
         return -1;
     }
+
+    glfwDefaultWindowHints();
+
+    app.displayPos.x = monitorX + (videoMode->width - windowWidth) / 2;
+    app.displayPos.y = monitorY + (videoMode->height - windowHeight) / 2;
+
+    glfwSetWindowPos(window, app.displayPos.x, app.displayPos.y);
+    glfwShowWindow(window);
 
     glfwSetWindowUserPointer(window, &app);
 
@@ -166,6 +193,7 @@ int main()
     glfwSetCharCallback(window, OnGlfwCharEvent);
     glfwSetFramebufferSizeCallback(window, OnGlfwResizeFramebuffer);
     glfwSetWindowCloseCallback(window, OnGlfwCloseWindow);
+    glfwSetWindowPosCallback(window, OnGlfwSetWindowPos);
 
     glfwMakeContextCurrent(window);
 
@@ -231,6 +259,8 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGuizmo::BeginFrame();
+        
         Gui(&app);
         ImGui::Render();
 
@@ -259,6 +289,7 @@ int main()
 
         app.input.mouseDelta = glm::vec2(0.0f, 0.0f);
 
+
         // Render
         Render(&app);
 
@@ -271,6 +302,7 @@ int main()
             glfwMakeContextCurrent(backup_current_context);
         }
 
+        ImGui::EndFrame();
         // Present image on screen
         glfwSwapBuffers(window);
 
