@@ -38,7 +38,7 @@ void Init(App* app)
     // Default Texture loading
     app->diceTexIdx = TextureSupport::LoadTexture2D(app, "dice.png");
     
-    // - programs (and retrieve uniform indices)
+    // Programs (and retrieve uniform indices)
     const u32 litTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_lit_textured.vert", "Shaders\\shader_lit_textured.frag", "LIT_TEXTURED");
     const u32 litBaseProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_lit_base.vert", "Shaders\\shader_lit_base.frag", "LIT_BASE");
 
@@ -46,7 +46,6 @@ void Init(App* app)
     const u32 unlitTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_textured.vert", "Shaders\\shader_unlit_textured.frag", "UNLIT_TEXTURED");
 
     // Fill vertex shader layout auto
-    
     for (u32 p = 0; p < app->programs.size(); ++p)
     {
         Program& program = app->programs[p];
@@ -71,11 +70,13 @@ void Init(App* app)
     
     app->mode = Mode_TexturedQuad;
 
+    // Load models
     const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\Patrick.obj");
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
-    
+
+    // Create entities
     CreateEntity(app, glm::vec3(-2.0f, -3.5f, 0.0f), glm::vec3(0.0f),glm::vec3(3.0f)
         ,sampleMeshModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
     CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
@@ -95,26 +96,32 @@ void Init(App* app)
        ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light");
     // CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
     //    ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
-    
+
+    // Set camera intial pos
     app->camera.position = glm::vec3(-3.0f, 1.0f, 25.0f);
-    //PushTransformDataToShader(app);
 }
 
 void CameraGUI(App* app) {
+    
+    // Update camera
     ImGui::Text("Camera");
     ImGui::InputFloat3("Position##Camera", &app->camera.position[0]);
     if(ImGui::InputFloat3("Pitch/Yaw/Roll", &app->camera.angles[0]))
         app->camera.UpdateCameraVectors();
 }
 void OpenGLContextGUI(App* app) {
+    
+    // Debug checkboxes
     ImGui::Checkbox("Show Demo Window", &app->showDemoWindow);
     ImGui::Checkbox("Draw Wireframe", &app->drawWireFrame);
     ImGui::Checkbox("Debug UBO", &app->debugUBO);
-    
+
+    // Rendering mode selection
     int renderingModeSelection = static_cast<int>(app->renderingMode);
     ImGui::Combo("Rendering Mode", &renderingModeSelection, RenderingModeStr, IM_ARRAYSIZE(RenderingModeStr));
     app->renderingMode = static_cast<RenderingMode>(renderingModeSelection);
-    
+
+    // Full OpenGL & GLSL info dump
     ImGui::Separator();
     ImGui::Text("OpenGL Context");
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS:");
@@ -161,6 +168,7 @@ void EntityHierarchyGUI(const App* app)
         }
     }
 }
+
 void EntityTransformGUI(App* app)
 {
     ImGui::Text("Entity: %s", app->entities[selectedEntity]->name.c_str());
@@ -169,59 +177,10 @@ void EntityTransformGUI(App* app)
     {
         Entity& entity = *app->entities[selectedEntity];
         EditTransform(app, glm::value_ptr(app->camera.GetViewMatrix()), glm::value_ptr(app->projectionMat), glm::value_ptr(app->entities[selectedEntity]->worldMatrix), 100.f);
-        // Decompose model matrix
-        /*glm::vec3 skew;
-        glm::vec4 perspective;
-        glm::quat orientation;
-        glm::decompose(app->entities[selectedEntity]->worldMatrix, entity.scale, orientation, entity.position, skew, perspective);
-        glm::vec3 eulerAnglesOrientation = glm::degrees(glm::eulerAngles(orientation));
-
-        constexpr ImGuiInputTextFlags inputTextFlags =  ImGuiInputTextFlags_EnterReturnsTrue;
-        // Modify values
-        bool valueChanged = false;
-        if (ImGui::InputFloat3("Translation", glm::value_ptr(entity.position), "%.3f")
-            || ImGui::InputFloat3("Orientation Euler", glm::value_ptr(eulerAnglesOrientation), "%.3f")
-            || ImGui::InputFloat4("Orientation Quat", glm::value_ptr(entity.orientationQuat), "%.3f", ImGuiInputTextFlags_ReadOnly)
-            || ImGui::InputFloat3("Scale", glm::value_ptr(entity.scale), "%.3f"))
-            valueChanged = true;
-        
-        if (valueChanged )
-        {
-            // Update the entity's orientation quaternion and Euler angles
-            entity.orientationQuat = glm::quat(glm::radians(eulerAnglesOrientation));
-            entity.orientationEuler = eulerAnglesOrientation;
-            entity.scale = glm::clamp(entity.scale, glm::vec3(0.001f), glm::vec3(100.0f));
-
-            // Recompose the model matrix
-            glm::mat4 composedModelMat = glm::mat4(1.0f);
-            composedModelMat = glm::translate(composedModelMat, entity.position);
-            composedModelMat = composedModelMat * glm::toMat4(entity.orientationQuat);
-            composedModelMat = glm::scale(composedModelMat, entity.scale);
-
-            // Update the world matrix of the entity
-            entity.worldMatrix = composedModelMat;
-        }
-        
-        constexpr bool alphaPreview = true;
-        constexpr bool alphaHalfPreview = false;
-        constexpr bool optionsMenu = true;
-        constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
-        ImGui::ColorEdit4("ObjectColor##2", (float*)&app->entities[selectedEntity]->color[0], miscFlags);*/
     }
 }
 
-void Gui(App* app)
-{
-    if (app->showDemoWindow)
-        ImGui::ShowDemoWindow(&app->showDemoWindow);
-    
-    ImGui::Begin("Debug");
-    OpenGLContextGUI(app);
-    ImGui::Separator();
-    CameraGUI(app);
-    ImGui::Separator();
-    EntityTransformGUI(app);
-    ImGui::Separator();
+void ProgramsGUI(App* app) {
     u32& itemCurrentIdx = app->entities[selectedEntity]->programIndex;                    // Here our selection data is an index.
     const char* comboLabel = app->programs[itemCurrentIdx].programName.c_str();  // Label to preview before opening the combo (technically it could be anything)
     if (ImGui::BeginCombo("Active program", comboLabel))
@@ -238,6 +197,20 @@ void Gui(App* app)
         }
         ImGui::EndCombo();
     }
+}
+void Gui(App* app)
+{
+    if (app->showDemoWindow)
+        ImGui::ShowDemoWindow(&app->showDemoWindow);
+    
+    ImGui::Begin("Debug");
+    OpenGLContextGUI(app);
+    ImGui::Separator();
+    CameraGUI(app);
+    ImGui::Separator();
+    EntityTransformGUI(app);
+    ImGui::Separator();
+    ProgramsGUI(app);
     ImGui::Separator();
     EntityHierarchyGUI(app);
     ImGui::End();
@@ -245,6 +218,7 @@ void Gui(App* app)
 
 void Update(App* app)
 {
+    // Update camera inputs
     Camera& camera = app->camera;
     
     if (app->input.keys[K_W] == BUTTON_PRESSED)
@@ -258,11 +232,14 @@ void Update(App* app)
 
     if (app->input.mouseButtons[MouseButton::RIGHT] == BUTTON_PRESSED)
         camera.ProcessMouseMovement(app->input.mouseDelta.x, -app->input.mouseDelta.y);
-    
+
+    // Update projection matrix after new camera inputs
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
 
-
+    // Programs hot reload
     CheckShadersHotReload(app);
+
+    // Uniform buffers push
     Buffer& uniformBuffer = app->uniformBuffer;
     BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
     PushTransformDataToShader(app);
@@ -449,14 +426,16 @@ void PushTransformDataToShader(App* app)
         glm::mat4 ModelViewMat = app->camera.GetViewMatrix() * entity.worldMatrix;
         entity.worldViewProjectionMat = app->projectionMat * ModelViewMat;
         entity.normalMatrix = glm::mat3(glm::transpose(glm::inverse(ModelViewMat)));
-        
+
+        // Set buffer block start and set offset
         BufferManagement::SetBufferBlockStart(uniformBuffer, BufferManagement::uniformBlockAlignment, entity.localParamsOffset);
 
         PUSH_VEC4(uniformBuffer, entity.color);
         PUSH_MAT4(uniformBuffer, entity.worldMatrix);
         PUSH_MAT4(uniformBuffer, entity.worldViewProjectionMat);
         PUSH_MAT4(uniformBuffer, entity.normalMatrix);
-        
+
+        // Set buffer block end and set size
         BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, entity.localParamsSize, entity.localParamsOffset);
 
         if (app->debugUBO)
@@ -469,7 +448,8 @@ void PushTransformDataToShader(App* app)
 void PushLightDataToShader(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
-    
+
+    // Set buffer block start and set offset
     BufferManagement::SetBufferBlockStart(uniformBuffer, BufferManagement::uniformBlockAlignment, app->globalParamsOffset);
     
     const u32 lightsCount = (u32)app->lights.size();
@@ -477,6 +457,7 @@ void PushLightDataToShader(App* app)
     PUSH_U_INT(uniformBuffer, lightsCount);
     for (u32 i = 0; i < lightsCount; ++i)
     {
+        // Correct if necessary the alignment of array 
         BufferManagement::AlignHead(uniformBuffer, 4 * BASIC_MACHINE_UNIT);
 
         const Light& light = *app->lights[i];
@@ -485,7 +466,8 @@ void PushLightDataToShader(App* app)
         PUSH_VEC3(uniformBuffer, light.orientationEuler);
         PUSH_VEC3(uniformBuffer, light.position);
     }
-    
+
+    // Set buffer block end and set size
     BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, app->globalParamsSize, app->globalParamsOffset);
 
     if (app->debugUBO)
@@ -497,12 +479,15 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
 {
     if (editTransformDecomposition)
     {
+        // Keyboard shortcuts for input mode
         if (app->input.keys[K_1] == BUTTON_PRESS)
             app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
         if (app->input.keys[K_2] == BUTTON_PRESS)
             app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::ROTATE;
         if (app->input.keys[K_3] == BUTTON_PRESS) 
             app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::SCALE;
+
+        // Mouse buttons for input mode
         if (ImGui::RadioButton("Translate", app->imGuizmoData.mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
             app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
         ImGui::SameLine();
@@ -511,6 +496,8 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
         ImGui::SameLine();
         if (ImGui::RadioButton("Scale", app->imGuizmoData.mCurrentGizmoOperation == ImGuizmo::SCALE))
             app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::SCALE;
+
+        // Inputs for transform
         float matrixTranslation[3], matrixRotation[3], matrixScale[3];
         ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
         ImGui::InputFloat3("Translate", matrixTranslation);
@@ -518,6 +505,7 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
         ImGui::InputFloat3("Scale", matrixScale);
         ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
 
+        // World/local options
         if (app->imGuizmoData.mCurrentGizmoOperation != ImGuizmo::SCALE)
         {
             if (ImGui::RadioButton("Local", app->imGuizmoData.mCurrentGizmoMode == ImGuizmo::LOCAL))
@@ -526,11 +514,14 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
             if (ImGui::RadioButton("World", app->imGuizmoData.mCurrentGizmoMode == ImGuizmo::WORLD))
                 app->imGuizmoData.mCurrentGizmoMode = ImGuizmo::WORLD;
         }
+
+        // Key shortcut for toggling snap
         if (app->input.keys[K_4] == BUTTON_PRESS)
             app->imGuizmoData.useSnap = !app->imGuizmoData.useSnap;
         ImGui::Checkbox("Use Snap", &app->imGuizmoData.useSnap);
         ImGui::SameLine();
 
+        // Snaping options
         switch (app->imGuizmoData.mCurrentGizmoOperation)
         {
         case ImGuizmo::TRANSLATE:
@@ -542,7 +533,10 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
         case ImGuizmo::SCALE:
             ImGui::InputFloat("Scale Snap", &app->imGuizmoData.snap[0]);
             break;
+        default: ;
         }
+
+        // Bound sizing inputs
         ImGui::Checkbox("Bound Sizing", &app->imGuizmoData.boundSizing);
         if (app->imGuizmoData.boundSizing)
         {
@@ -553,8 +547,9 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
             ImGui::PopID();
         }
     }
-
-    ImGuiIO& io = ImGui::GetIO();
+    
+    // Imguizmo for transform
+    const ImGuiIO& io = ImGui::GetIO();
     float viewManipulateRight = io.DisplaySize.x;
     float viewManipulateTop = 0;
     ImGuizmo::SetRect(app->displayPos.x, app->displayPos.y, app->displaySize.x, app->displaySize.y);

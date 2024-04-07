@@ -9,7 +9,23 @@ struct Buffer
     Buffer(): size(0), type(0), handle(0), data(nullptr), head(0)
     {
     }
-
+    
+    ~Buffer()
+    {
+        if (type == GL_ELEMENT_ARRAY_BUFFER || type == GL_ARRAY_BUFFER || type == GL_UNIFORM_BUFFER)
+        {
+            glDeleteBuffers(1, &handle);
+        }
+        else if (type == GL_FRAMEBUFFER)
+        {
+            glDeleteFramebuffers(1, &handle);
+        }
+        else if (type == GL_RENDERBUFFER)
+        {
+            glDeleteRenderbuffers(1, &handle);
+        }
+    }
+    
     u32 size;
     GLenum type;
     GLuint handle;
