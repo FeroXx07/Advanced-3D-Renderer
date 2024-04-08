@@ -11,10 +11,18 @@ struct Image
     i32   stride;
 };
 
+enum class TextureType
+{
+    COLOR,
+    DEPTH,
+    STENCIL
+};
+
 struct Texture
 {
     GLuint      handle;
     std::string path;
+    TextureType type = TextureType::COLOR;
 };
 
 struct TextureSupport
@@ -26,6 +34,8 @@ struct TextureSupport
 
     static u32 CreateEmptyColorTexture(App* app, const u32 width, const u32 height);
     static u32 CreateEmptyDepthTexture(App* app, const u32 width, const u32 height);
+
+    static void ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight);
 };
 
 #endif // TEXTURE_H

@@ -10,26 +10,26 @@ inline u32 CreateSampleMesh(App* app)
     // - vertex buffers
     // - element/index buffers
     // - VAOs
-    constexpr float planeHalfWidth = 10.0f/2.0f;
-    constexpr float planeHalfHeight = 10.0f/2.0f;
+    constexpr float planeHalfWidth = 1.0f;
+    constexpr float planeHalfHeight = 1.0f;
 
     constexpr VertexV3V2 vertices[] = {
-        {glm::vec3(0.0 - planeHalfWidth, 0.0, 0.0 - planeHalfHeight), glm::vec3(0.0, 1.0, 0.0),glm::vec2(0.0, 0.0)}, // bottom-left vertex
-        {glm::vec3(0.0 + planeHalfWidth, 0.0, 0.0 - planeHalfHeight), glm::vec3(0.0, 1.0, 0.0),glm::vec2(1.0, 0.0)}, // bottom-right vertex
-        {glm::vec3(0.0 + planeHalfWidth, 0.0, 0.0 + planeHalfHeight), glm::vec3(0.0, 1.0, 0.0),glm::vec2(1.0, 1.0)}, // top-right vertex
-        {glm::vec3(0.0 - planeHalfWidth, 0.0, 0.0 + planeHalfHeight), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0.0, 1.0)}, // top-left vertex
+        {glm::vec3(0.0 - planeHalfWidth, 0.0 - planeHalfHeight, 0.0), glm::vec3(0.0, 1.0, 0.0),glm::vec2(0.0, 0.0)}, // bottom-left vertex
+        {glm::vec3(0.0 + planeHalfWidth, 0.0 - planeHalfHeight, 0.0), glm::vec3(0.0, 1.0, 0.0),glm::vec2(1.0, 0.0)}, // bottom-right vertex
+        {glm::vec3(0.0 + planeHalfWidth, 0.0 + planeHalfHeight, 0.0), glm::vec3(0.0, 1.0, 0.0),glm::vec2(1.0, 1.0)}, // top-right vertex
+        {glm::vec3(0.0 - planeHalfWidth, 0.0 + planeHalfHeight, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0.0, 1.0)}, // top-left vertex
     };
 
     const u32 indices[] = {
         0, 1, 2,
         0, 2, 3
     };
-    Model model = {"MyPlaneModel"};
-    Mesh mesh = {"MyPlaneMesh"};
+    Model model = {"QuadModel"};
+    Mesh mesh = {"QuadMesh"};
     
     app->materials.emplace_back();
     Material& material = app->materials.back();
-    material.name = "MyPlane_Dice_Mat";
+    material.name = "Quad_Mat";
     material.albedo = glm::vec3(255);
     material.albedoTextureIdx = app->colorTextureIdx;
     model.materialIdx.push_back(app->materials.size() - 1);
@@ -65,7 +65,7 @@ inline u32 CreateSampleMesh(App* app)
     vertexBufferLayout.attributes.push_back(VertexBufferAttribute{2, 2, sizeof(glm::vec3) * 2}); // 2D tex coords
     vertexBufferLayout.stride = sizeof(VertexV3V2);
     
-    SubMesh subMesh = {"MyPlaneSubMesh"};
+    SubMesh subMesh = {"QuadSubMesh"};
     subMesh.vertexBufferLayout = vertexBufferLayout;
 
     constexpr u32 verticesSize = std::size(vertices);

@@ -94,7 +94,7 @@ u32 TextureSupport::CreateEmptyColorTexture(App* app, const u32 width, const u32
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    const u32 texIdx = (u32)app->textures.size();
+    const u32 texIdx = static_cast<u32>(app->textures.size());
     app->textures.push_back(tex);
 
     return texIdx;
@@ -115,8 +115,43 @@ u32 TextureSupport::CreateEmptyDepthTexture(App* app, const u32 width, const u32
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    const u32 texIdx = (u32)app->textures.size();
+    const u32 texIdx = static_cast<u32>(app->textures.size());
     app->textures.push_back(tex);
 
     return texIdx;
+}
+void TextureSupport::ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight)
+{
+    GLuint resizedTexHandle = 0;
+    switch (texToResize.type) {
+    case TextureType::COLOR: {
+        // Create a new texture image 2d
+        glGenTextures(1, &resizedTexHandle);
+        glBindTexture(GL_TEXTURE_2D, resizedTexHandle);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        // Copy the pixel contents from old to new resized
+        glCopyImageSubData(texToResize.handle, GL_TEXTURE_2D, 0, 0, 0, 0,
+                      resizedTexHandle, GL_TEXTURE_2D, 0, 0, 0, 0,
+                      static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 1);
+    }
+        break;
+    case TextureType::DEPTH:
+        break;
+    case TextureType::STENCIL:
+        break;
+    }
+
+    // Release memory from old
+    glDeleteTextures(1, &texToResize.handle);
+
+    // Assign the handle of new to the old
+    texToResize.handle = resizedTexHandle;
 }

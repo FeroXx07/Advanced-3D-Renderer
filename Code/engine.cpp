@@ -37,8 +37,10 @@ void Init(App* app)
     // Create frame buffer and a color texture attachment
     app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
     app->colorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, app->displaySize.x, app->displaySize.y);
+    app->depthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, app->displaySize.x, app->displaySize.y);
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, 0);
+    FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle, 0);
     FrameBufferManagement::CheckStatus();
     const std::vector<u32> attachments = {0};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
@@ -57,6 +59,8 @@ void Init(App* app)
     const u32 unlitBaseProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_base.vert", "Shaders\\shader_unlit_base.frag", "UNLIT_BASE");
     const u32 unlitTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_textured.vert", "Shaders\\shader_unlit_textured.frag", "UNLIT_TEXTURED");
 
+    app->screenDisplayProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_screen.vert", "Shaders\\shader_unlit_screen.frag", "UNLIT_SCREEN");
+    
     // Fill vertex shader layout auto
     for (u32 p = 0; p < app->programs.size(); ++p)
     {
@@ -84,13 +88,13 @@ void Init(App* app)
 
     // Load models
     const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\Patrick.obj");
-    const u32 sampleMeshModelIdx = CreateSampleMesh(app);
+    app->quadModel = CreateSampleMesh(app);
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
     
     // Create entities
-    CreateEntity(app, glm::vec3(-2.0f, 10.0f, -15.0f), glm::vec3(-90.0f, 0.0f, 0.0f),glm::vec3(3.0f)
-        ,sampleMeshModelIdx, unlitTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
+    // CreateEntity(app, glm::vec3(-2.0f, 10.0f, -15.0f), glm::vec3(-90.0f, 0.0f, 0.0f),glm::vec3(3.0f)
+    //     ,sampleMeshModelIdx, unlitTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
     CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,cubeModelIdx, litBaseProgramIdx, glm::vec4(1.0f), "Cube");
     CreateEntity(app, glm::vec3(-12.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
@@ -248,6 +252,7 @@ void Update(App* app)
     // Update projection matrix after new camera inputs
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
 
+    //TextureSupport::ResizeTexture(app, app->textures[app->colorTextureIdx], app->displaySize.x, app->displaySize.y);
     // Programs hot reload
     CheckShadersHotReload(app);
 
@@ -261,21 +266,16 @@ void Update(App* app)
 
 void Render(App* app)
 {
-    // Render on this framebuffer render targets
-    FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
-
-    // Select on which render targets to draw
-    const std::vector<u32> attachments = { 0 };
-    FrameBufferManagement::SetDrawBuffersTextures(attachments);
-    glEnable(GL_DEPTH_TEST);
-
-    glClearColor(0.1f, 0.258f, 0.8f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   
+    // glEnable(GL_DEPTH_TEST);
+    //
+    // glClearColor(0.1f, 0.258f, 0.8f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //
+    // glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+    //
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
 
     switch (app->renderingMode) {
@@ -286,16 +286,21 @@ void Render(App* app)
         DeferredRender(app);
         break;
     }
-
-    FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
-
-    ForwardRender(app);
+    
+    //ForwardRender(app);
     //FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
 }
   
 void ForwardRender(App* app)
 {
+    // Render on this framebuffer render targets
+    FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
+
+    // Select on which render targets to draw
+    const std::vector<u32> attachments = { 0 };
+    FrameBufferManagement::SetDrawBuffersTextures(attachments);
+    
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
     glEnable(GL_DEPTH_TEST);
     
@@ -341,26 +346,9 @@ void ForwardRender(App* app)
                 for (u32 i = 0; i < subMeshCount; i++)
                 {
                     SubMesh& subMesh = mesh.subMeshes[i];
-
-                    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, subMesh.name.c_str());
-                    const GLuint vao = VAOSupport::FindVAO(mesh, i, program);
-                
-                    if (app->drawWireFrame)
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                    else
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                
-                    glBindVertexArray(vao);
-
                     const u32 subMeshMaterialIdx = model.materialIdx[i];
                     const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
-
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[subMeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i((GLint)app->defaultShaderProgram_uTexture, 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
-
-                    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(subMesh.indices.size()), GL_UNSIGNED_INT, (void*)static_cast<u64>(subMesh.indexOffset));
-                    glPopDebugGroup();
+                    mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
                 }
                 glPopDebugGroup();
             }
@@ -368,6 +356,28 @@ void ForwardRender(App* app)
         break;
     case Mode_Count:
         break;
+    }
+    glPopDebugGroup();
+    
+    FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+    glDisable(GL_DEPTH_TEST);
+    
+    // Draw the framebuffer onto a quad that covers the whole screen.
+    const Program& program = app->programs[app->screenDisplayProgramIdx];
+    app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
+    glUseProgram(program.handle);
+    Model& model = app->models[app->quadModel];
+    Mesh& mesh = app->meshes[model.meshIdx];
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, model.name.c_str());
+    const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
+    for (u32 i = 0; i < subMeshCount; i++)
+    {
+        const u32 subMeshMaterialIdx = model.materialIdx[i];
+        const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+        mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
     }
     glPopDebugGroup();
 }

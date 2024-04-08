@@ -121,7 +121,11 @@ void FrameBufferManagement::UnBindFrameBuffer(const Buffer& buffer)
 
 void FrameBufferManagement::SetColorAttachment(const Buffer& buffer, const GLint colorTextureIdx, const GLuint layoutLocation)
 {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + layoutLocation), GL_TEXTURE_2D, colorTextureIdx, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + layoutLocation), GL_TEXTURE_2D, colorTextureIdx, 0);
+}
+void FrameBufferManagement::SetDepthAttachment(const Buffer& buffer, const GLint depthTextureIdx, const GLuint layoutLocation)
+{
+    glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(GL_DEPTH_ATTACHMENT), GL_TEXTURE_2D, depthTextureIdx, 0);
 }
 void FrameBufferManagement::SetDrawBuffersTextures(const std::vector<u32>& activeAttachments)
 {

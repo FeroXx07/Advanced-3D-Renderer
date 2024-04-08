@@ -66,6 +66,8 @@ public:
     static void UnBindFrameBuffer(const Buffer& buffer);
 
     static void SetColorAttachment(const Buffer& buffer, const GLint colorTextureIdx, const GLuint layoutLocation);
+    static void SetDepthAttachment(const Buffer& buffer, const GLint depthTextureIdx, const GLuint layoutLocation);
+
     static void SetDrawBuffersTextures(const std::vector<u32>& activeAttachments);
 
     static bool CheckStatus();

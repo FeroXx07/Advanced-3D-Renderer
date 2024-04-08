@@ -52,6 +52,13 @@ struct App
     ivec2 displaySize;
     ivec2 displayPos;
 
+    // Screen quad
+    u32 quadModel;
+    u32 screenDisplayProgramIdx;
+    Buffer frameBufferObject;
+    u32 colorTextureIdx;
+    u32 depthTextureIdx;
+    
     bool drawWireFrame = false;
     RenderingMode renderingMode = RenderingMode::FORWARD;
     
@@ -76,8 +83,7 @@ struct App
 
     // Buffers
     Buffer uniformBuffer;
-    Buffer frameBufferObject;
-    u32 colorTextureIdx;
+ 
     
     u32 globalParamsOffset = 0;
     u32 globalParamsSize = 0;

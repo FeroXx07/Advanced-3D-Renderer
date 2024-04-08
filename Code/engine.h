@@ -30,11 +30,6 @@ void PushTransformDataToShader(App* app);
 
 void PushLightDataToShader(App* app);
 
-struct VAOSupport
-{
-    static void CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle);
-    static GLuint FindVAO(Mesh& mesh, const u32 subMeshIndex, const Program& program);
-};
 
 static i32 selectedEntity = 0;
 void EditTransform(App* app, const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition);

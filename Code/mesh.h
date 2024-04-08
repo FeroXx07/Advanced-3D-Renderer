@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "buffer_management.h"
+#include "program.h"
 
 struct Model
 {
@@ -15,6 +16,20 @@ struct Model
     u32 meshIdx;
     std::vector<u32> materialIdx;
 };
+
+struct Material
+{
+    std::string name;
+    vec3 albedo;
+    vec3 emissive;
+    f32 smoothness;
+    u32 albedoTextureIdx;
+    u32 emissiveTextureIdx;
+    u32 specularTextureIdx;
+    u32 normalsTextureIdx;
+    u32 bumpTextureIdx;
+};
+
 
 struct SubMesh
 {
@@ -30,6 +45,7 @@ struct SubMesh
     u32 indexOffset;
 
     std::vector<VAO> vaoList;
+    
 };
 
 struct Mesh
@@ -42,18 +58,37 @@ struct Mesh
     std::vector<SubMesh> subMeshes;
     Buffer vertexBuffer;
     Buffer indexBuffer;
+
+    void DrawSubMesh(u32 subMeshIndex, const Texture& texture, const u32 textureUniform, const Program& program, const bool drawWireFrame = false);
 };
 
-struct Material
+
+struct VAOSupport
 {
-    std::string name;
-    vec3 albedo;
-    vec3 emissive;
-    f32 smoothness;
-    u32 albedoTextureIdx;
-    u32 emissiveTextureIdx;
-    u32 specularTextureIdx;
-    u32 normalsTextureIdx;
-    u32 bumpTextureIdx;
+    static void CreateNewVAO(const Mesh& mesh, const SubMesh& subMesh, const Program& program, GLuint& vaoHandle);
+    static GLuint FindVAO(Mesh& mesh, const u32 subMeshIndex, const Program& program);
 };
+
+inline void Mesh::DrawSubMesh(u32 subMeshIndex, const Texture& texture, const u32 textureUniform, const Program& program, const bool drawWireFrame)
+{
+    const SubMesh& subMesh = subMeshes[subMeshIndex];
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, subMesh.name.c_str());
+    const GLuint vao = VAOSupport::FindVAO(*this, subMeshIndex, program);
+                
+    if (drawWireFrame)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    else
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                
+    glBindVertexArray(vao);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture.handle);
+    glUniform1i(static_cast<GLint>(textureUniform), 0); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
+
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(subMesh.indices.size()), GL_UNSIGNED_INT, reinterpret_cast<void*>(static_cast<u64>(subMesh.indexOffset)));
+    glPopDebugGroup();
+}
+
 #endif // MESH_H
