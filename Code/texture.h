@@ -24,8 +24,8 @@ struct TextureSupport
     static GLuint CreateTexture2DFromImage(const Image& image);
     static u32 LoadTexture2D(App* app, const char* filepath);
 
-    static Texture CreateEmptyColorTexture(const u32 width, const u32 height);
-    static Texture CreateEmptyDepthTexture(const u32 width, const u32 height);
+    static u32 CreateEmptyColorTexture(App* app, const u32 width, const u32 height);
+    static u32 CreateEmptyDepthTexture(App* app, const u32 width, const u32 height);
 };
 
 #endif // TEXTURE_H

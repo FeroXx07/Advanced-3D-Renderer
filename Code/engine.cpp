@@ -36,9 +36,9 @@ void Init(App* app)
 
     // Create frame buffer and a color texture attachment
     app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
-    app->colorTexture = TextureSupport::CreateEmptyColorTexture(app->displaySize.x, app->displaySize.y);
+    app->colorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, app->displaySize.x, app->displaySize.y);
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
-    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->colorTexture.handle, 0);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, 0);
     FrameBufferManagement::CheckStatus();
     const std::vector<u32> attachments = {0};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
@@ -87,10 +87,10 @@ void Init(App* app)
     const u32 sampleMeshModelIdx = CreateSampleMesh(app);
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
-
+    
     // Create entities
-    CreateEntity(app, glm::vec3(-2.0f, -3.5f, 0.0f), glm::vec3(0.0f),glm::vec3(3.0f)
-        ,sampleMeshModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
+    CreateEntity(app, glm::vec3(-2.0f, 10.0f, -15.0f), glm::vec3(-90.0f, 0.0f, 0.0f),glm::vec3(3.0f)
+        ,sampleMeshModelIdx, unlitTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
     CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,cubeModelIdx, litBaseProgramIdx, glm::vec4(1.0f), "Cube");
     CreateEntity(app, glm::vec3(-12.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
@@ -261,6 +261,23 @@ void Update(App* app)
 
 void Render(App* app)
 {
+    // Render on this framebuffer render targets
+    FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
+
+    // Select on which render targets to draw
+    const std::vector<u32> attachments = { 0 };
+    FrameBufferManagement::SetDrawBuffersTextures(attachments);
+    glEnable(GL_DEPTH_TEST);
+
+    glClearColor(0.1f, 0.258f, 0.8f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
+
     switch (app->renderingMode) {
     case FORWARD:
         ForwardRender(app);
@@ -269,6 +286,12 @@ void Render(App* app)
         DeferredRender(app);
         break;
     }
+
+    FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
+
+    ForwardRender(app);
+    //FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
+
 }
   
 void ForwardRender(App* app)
@@ -348,7 +371,9 @@ void ForwardRender(App* app)
     }
     glPopDebugGroup();
 }
+
 void DeferredRender(App* app) {}
+
 void CheckShadersHotReload(App* app)
 {
     for (u64 i = 0; i < app->programs.size(); ++i)
@@ -378,6 +403,7 @@ void CheckShadersHotReload(App* app)
         }
     }
 }
+
 void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale, const u32 modelIndex, const u32 programIdx, const glm::vec4& diffuseColor, const char* name)
 {
     std::shared_ptr<Entity> entity = std::make_shared<Entity>();
@@ -399,6 +425,7 @@ void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientat
     
     app->entities.emplace_back(entity);
 }
+
 void CreateLight(App* app, LightType lightType, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale, const u32 modelIndex, const u32 programIdx, const glm::vec4& lightColor, const char* name)
 {
     std::shared_ptr<Light> light = std::make_shared<Light>();
@@ -491,6 +518,8 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
 {
     if (editTransformDecomposition)
     {
+        Entity& entity = *app->entities[selectedEntity];
+
         // Keyboard shortcuts for input mode
         if (app->input.keys[K_1] == BUTTON_PRESS)
             app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
@@ -510,12 +539,11 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
             app->imGuizmoData.mCurrentGizmoOperation = ImGuizmo::SCALE;
 
         // Inputs for transform
-        float matrixTranslation[3], matrixRotation[3], matrixScale[3];
-        ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
-        ImGui::InputFloat3("Translate", matrixTranslation);
-        ImGui::InputFloat3("Rotate", matrixRotation);
-        ImGui::InputFloat3("Scale", matrixScale);
-        ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
+        ImGuizmo::DecomposeMatrixToComponents(matrix, glm::value_ptr(entity.position), glm::value_ptr(entity.orientationEuler), glm::value_ptr(entity.scale));
+        ImGui::InputFloat3("Translate", glm::value_ptr(entity.position));
+        ImGui::InputFloat3("Rotate", glm::value_ptr(entity.orientationEuler));
+        ImGui::InputFloat3("Scale", glm::value_ptr(entity.scale));
+        ImGuizmo::RecomposeMatrixFromComponents(glm::value_ptr(entity.position), glm::value_ptr(entity.orientationEuler), glm::value_ptr(entity.scale), matrix);
 
         // World/local options
         if (app->imGuizmoData.mCurrentGizmoOperation != ImGuizmo::SCALE)
@@ -568,6 +596,11 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
     //ImGuizmo::DrawGrid(cameraView, glm::value_ptr(app->projectionMat), glm::value_ptr(glm::mat4(1.0f)), 100.f);
     ImGuizmo::Manipulate(cameraView, glm::value_ptr(app->projectionMat), app->imGuizmoData.mCurrentGizmoOperation, app->imGuizmoData.mCurrentGizmoMode, glm::value_ptr(app->entities[selectedEntity]->worldMatrix), nullptr, app->imGuizmoData.useSnap ? &app->imGuizmoData.snap[0] : nullptr, app->imGuizmoData.boundSizing ? app->imGuizmoData.bounds : nullptr, app->imGuizmoData.boundSizingSnap ? app->imGuizmoData.boundsSnap : nullptr);
 
+    constexpr bool alphaPreview = true;
+    constexpr bool alphaHalfPreview = false;
+    constexpr bool optionsMenu = true;
+    constexpr ImGuiColorEditFlags miscFlags = (alphaHalfPreview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alphaPreview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (optionsMenu ? 0 : ImGuiColorEditFlags_NoOptions);
+    ImGui::ColorEdit4("ObjectColor##2", (float*)&app->entities[selectedEntity]->color[0], miscFlags); 
     //ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
 }
 

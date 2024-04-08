@@ -119,9 +119,9 @@ void FrameBufferManagement::UnBindFrameBuffer(const Buffer& buffer)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBufferManagement::SetColorAttachment(const Buffer& buffer, const GLint colorTexture, const GLuint layoutLocation)
+void FrameBufferManagement::SetColorAttachment(const Buffer& buffer, const GLint colorTextureIdx, const GLuint layoutLocation)
 {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + layoutLocation), GL_TEXTURE_2D, colorTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + layoutLocation), GL_TEXTURE_2D, colorTextureIdx, 0);
 }
 void FrameBufferManagement::SetDrawBuffersTextures(const std::vector<u32>& activeAttachments)
 {

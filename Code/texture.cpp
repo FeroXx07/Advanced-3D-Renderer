@@ -77,7 +77,8 @@ u32 TextureSupport::LoadTexture2D(App* app, const char* filepath)
         return UINT32_MAX;
     }
 }
-Texture TextureSupport::CreateEmptyColorTexture(const u32 width, const u32 height)
+
+u32 TextureSupport::CreateEmptyColorTexture(App* app, const u32 width, const u32 height)
 {
     Texture tex = {};
     tex.path = "MEMORY";
@@ -90,12 +91,16 @@ Texture TextureSupport::CreateEmptyColorTexture(const u32 width, const u32 heigh
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    return tex;
+    const u32 texIdx = (u32)app->textures.size();
+    app->textures.push_back(tex);
+
+    return texIdx;
 }
 
-Texture TextureSupport::CreateEmptyDepthTexture(const u32 width, const u32 height)
+u32 TextureSupport::CreateEmptyDepthTexture(App* app, const u32 width, const u32 height)
 {
     Texture tex = {};
     tex.path = "MEMORY";
@@ -110,5 +115,8 @@ Texture TextureSupport::CreateEmptyDepthTexture(const u32 width, const u32 heigh
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    return tex;
+    const u32 texIdx = (u32)app->textures.size();
+    app->textures.push_back(tex);
+
+    return texIdx;
 }
