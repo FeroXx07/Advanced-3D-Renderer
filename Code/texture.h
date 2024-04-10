@@ -11,6 +11,7 @@ struct Image
     i32   stride;
 };
 
+static const char* TextureTypeStr[] = {"COLOR", "DEPTH", "STENCIL"}; 
 enum class TextureType
 {
     COLOR,
@@ -32,8 +33,8 @@ struct TextureSupport
     static GLuint CreateTexture2DFromImage(const Image& image);
     static u32 LoadTexture2D(App* app, const char* filepath);
 
-    static u32 CreateEmptyColorTexture(App* app, const u32 width, const u32 height);
-    static u32 CreateEmptyDepthTexture(App* app, const u32 width, const u32 height);
+    static u32 CreateEmptyColorTexture(App* app, const char* name, const u32 width, const u32 height);
+    static u32 CreateEmptyDepthTexture(App* app, const char* name, const u32 width, const u32 height);
 
     static void ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight);
 };

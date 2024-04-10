@@ -49,7 +49,8 @@ struct App
 
     // Graphics
     OpenGlContext ctx;
-    ivec2 displaySize;
+    ivec2 displaySizeCurrent;
+    ivec2 displaySizePrevious;
     ivec2 displayPos;
 
     // Screen quad

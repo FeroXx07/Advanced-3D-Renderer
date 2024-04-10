@@ -122,7 +122,13 @@ void OnGlfwCharEvent(GLFWwindow* window, unsigned int character)
 void OnGlfwResizeFramebuffer(GLFWwindow* window, int width, int height)
 {
     App* app = (App*)glfwGetWindowUserPointer(window);
-    app->displaySize = vec2(glm::max(width, 1), glm::max(height, 1));
+
+    if (app->displaySizePrevious != app->displaySizeCurrent)
+        app->displaySizePrevious = app->displaySizeCurrent;
+    
+    app->displaySizeCurrent = vec2(glm::max(width, 1), glm::max(height, 1));
+    
+    OnScreenResize(app);
 }
 
 void OnGlfwCloseWindow(GLFWwindow* window)
@@ -141,7 +147,8 @@ int main()
 {
     App app         = {};
     app.deltaTime   = 1.0f/60.0f;
-    app.displaySize = ivec2(WINDOW_WIDTH, WINDOW_HEIGHT);
+    app.displaySizeCurrent = ivec2(WINDOW_WIDTH, WINDOW_HEIGHT);
+    app.displaySizePrevious = app.displaySizeCurrent;
     app.isRunning   = true;
 
     glfwSetErrorCallback(OnGlfwError);
@@ -262,7 +269,6 @@ int main()
         ImGuizmo::BeginFrame();
         
         Gui(&app);
-        ImGui::Render();
 
         // Clear input state if required by ImGui
         if (ImGui::GetIO().WantCaptureKeyboard)
@@ -292,6 +298,7 @@ int main()
 
         // Render
         Render(&app);
+        ImGui::Render();
 
         // ImGui Render
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

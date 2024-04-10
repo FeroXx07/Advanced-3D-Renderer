@@ -30,6 +30,7 @@ void PushTransformDataToShader(App* app);
 
 void PushLightDataToShader(App* app);
 
+void OnScreenResize(App* app);
 
 static i32 selectedEntity = 0;
 void EditTransform(App* app, const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition);

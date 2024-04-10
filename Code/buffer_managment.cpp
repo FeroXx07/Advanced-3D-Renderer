@@ -123,7 +123,7 @@ void FrameBufferManagement::SetColorAttachment(const Buffer& buffer, const GLint
 {
     glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + layoutLocation), GL_TEXTURE_2D, colorTextureIdx, 0);
 }
-void FrameBufferManagement::SetDepthAttachment(const Buffer& buffer, const GLint depthTextureIdx, const GLuint layoutLocation)
+void FrameBufferManagement::SetDepthAttachment(const Buffer& buffer, const GLint depthTextureIdx)
 {
     glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(GL_DEPTH_ATTACHMENT), GL_TEXTURE_2D, depthTextureIdx, 0);
 }

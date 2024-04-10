@@ -45,7 +45,6 @@ struct SubMesh
     u32 indexOffset;
 
     std::vector<VAO> vaoList;
-    
 };
 
 struct Mesh

@@ -36,18 +36,18 @@ void Init(App* app)
 
     // Create frame buffer and a color texture attachment
     app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
-    app->colorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, app->displaySize.x, app->displaySize.y);
-    app->depthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, app->displaySize.x, app->displaySize.y);
+    app->colorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->depthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, 0);
-    FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle, 0);
+    FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle);
     FrameBufferManagement::CheckStatus();
     const std::vector<u32> attachments = {0};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     
     // Camera & View init
-    app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
+    app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySizeCurrent.x / (float)app->displaySizeCurrent.y, 0.1f, 100.0f);
     
     // Default Texture loading
     app->diceTexIdx = TextureSupport::LoadTexture2D(app, "dice.png");
@@ -214,6 +214,218 @@ void ProgramsGUI(const App* app) {
         ImGui::EndCombo();
     }
 }
+static void PushStyleCompact()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
+}
+
+static void PopStyleCompact()
+{
+    ImGui::PopStyleVar(2);
+}
+
+void ResourcesGUI(const App* app)
+{
+    ImGui::Begin("Resources");
+    if (ImGui::CollapsingHeader("Frame Buffer", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Display Pos: ");
+        ImGui::SameLine();
+        ImGui::Text("%d, %d", app->displayPos.x, app->displayPos.y);
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Previous Display Size: ");
+        ImGui::SameLine();
+        ImGui::Text("%d, %d", app->displaySizePrevious.x, app->displaySizePrevious.y);
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Current Display Size: ");
+        ImGui::SameLine();
+        ImGui::Text("%d, %d", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    }
+    if (ImGui::CollapsingHeader("Models", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        PushStyleCompact();
+        static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        if (ImGui::BeginTable("Models table", 4, flags))
+        {
+            ImGui::TableSetupColumn("Idx vector", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Mesh Idx", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Material Idxs", ImGuiTableColumnFlags_WidthFixed);
+
+            ImGui::TableHeadersRow();
+            for (int row = 0; row < app->models.size(); row++)
+            {
+                const Model& model = app->models.at(row);
+                ImGui::TableNextRow();
+                
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(row).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)model.name.c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(model.meshIdx).c_str());
+
+                std::string materialIdxsStr = "";
+                for(i32 i = 0; i < model.materialIdx.size(); ++i)
+                {
+                    materialIdxsStr += " ";
+                    materialIdxsStr += std::to_string(model.materialIdx[i]).c_str();
+                    materialIdxsStr += ",";
+                }
+                
+                ImGui::TableNextColumn(); ImGui::Text((const char*)materialIdxsStr.c_str());
+            }
+            ImGui::EndTable();
+            PopStyleCompact();
+        }
+    }
+    if (ImGui::CollapsingHeader("Meshes", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        PushStyleCompact();
+        static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        if (ImGui::BeginTable("Meshes table", 5, flags))
+        {
+            ImGui::TableSetupColumn("Idx vector", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("SubMeshes", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Vertex buffer", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Index buffer", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableHeadersRow();
+            for (int row = 0; row < app->meshes.size(); row++)
+            {
+                const Mesh& mesh = app->meshes.at(row);
+                ImGui::TableNextRow();
+                
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(row).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)mesh.name.c_str());
+                ImGui::TableNextColumn();
+                if (ImGui::BeginTable("SubMeshes table", 5, flags))
+                {
+                    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Vertices count", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Indices count", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Vertex offset", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Index offset", ImGuiTableColumnFlags_WidthStretch);
+
+                    ImGui::TableHeadersRow();
+                    for (int rowSubMesh = 0; rowSubMesh < mesh.subMeshes.size(); rowSubMesh++)
+                    {
+                        const SubMesh& subMesh = mesh.subMeshes[rowSubMesh];
+                        ImGui::TableNextColumn(); ImGui::Text((const char*)subMesh.name.c_str());
+                        ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(subMesh.vertices.size()).c_str());
+                        ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(subMesh.indices.size()).c_str());
+                        ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(subMesh.vertexOffset).c_str());
+                        ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(subMesh.indexOffset).c_str());
+                    }
+                    ImGui::EndTable();
+                }
+                ImGui::TableNextColumn();
+                if (ImGui::BeginTable("VBO table", 3, flags))
+                {
+                    ImGui::TableSetupColumn("Handle", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Head", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableHeadersRow();
+
+                    ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mesh.vertexBuffer.handle).c_str());
+                    ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mesh.vertexBuffer.head).c_str());
+                    ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mesh.vertexBuffer.size).c_str());
+                    ImGui::EndTable();
+                }
+                
+                ImGui::TableNextColumn();
+                if (ImGui::BeginTable("EBO table", 3, flags))
+                {
+                    ImGui::TableSetupColumn("Handle", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Head", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableHeadersRow();
+
+                    ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mesh.indexBuffer.handle).c_str());
+                    ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mesh.indexBuffer.head).c_str());
+                    ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mesh.indexBuffer.size).c_str());
+                    ImGui::EndTable();
+                }
+                
+            }
+            ImGui::EndTable();
+            PopStyleCompact();
+        }
+    }
+    if (ImGui::CollapsingHeader("Textures", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        PushStyleCompact();
+        static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        if (ImGui::BeginTable("Textures table", 5, flags))
+        {
+            ImGui::TableSetupColumn("Idx vector", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Handle", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Image", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableHeadersRow();
+            for (int row = 0; row < app->textures.size(); row++)
+            {
+                const Texture& tex = app->textures.at(row);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(row).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(tex.handle).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)TextureTypeStr[(int)tex.type]);
+                ImGui::TableNextColumn(); ImGui::Text((const char*)tex.path.c_str());
+                ImGui::TableNextColumn();
+                ImVec2 uv_min = ImVec2(0.0f, 1.0f);                 // Top-left
+                ImVec2 uv_max = ImVec2(1.0f, 0.0f);                 // Lower-right
+                ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // No tint
+                ImVec4 border_col = ImGui::GetStyleColorVec4(ImGuiCol_Border);
+                ImGui::Image((void*)tex.handle, ImVec2(50, 50), uv_min, uv_max, tint_col, border_col);
+            }
+            ImGui::EndTable();
+            PopStyleCompact();
+        }
+    }
+    if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        PushStyleCompact();
+        static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        if (ImGui::BeginTable("Materials table", 10, flags))
+        {
+            ImGui::TableSetupColumn("Idx vector", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Albedo", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Emissive", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Smoothness", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("AlbedoTextureIdx", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("EmissiveTextureIdx", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("SpecularTextureIdx", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("NormalsTextureIdx", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("BumpTextureIdx", ImGuiTableColumnFlags_WidthFixed);
+
+            ImGui::TableHeadersRow();
+            for (int row = 0; row < app->materials.size(); row++)
+            {
+                const Material& mat = app->materials.at(row);
+                ImGui::TableNextRow();
+                
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(row).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)mat.name.c_str());
+                ImGui::TableNextColumn(); ImGui::ColorButton("Albedo", *(ImVec4*) glm::value_ptr(mat.albedo), ImGuiColorEditFlags_NoPicker);
+                ImGui::TableNextColumn(); ImGui::ColorButton("Emissive", *(ImVec4*) glm::value_ptr(mat.emissive), ImGuiColorEditFlags_NoPicker);
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.smoothness).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.albedoTextureIdx).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.emissiveTextureIdx).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.specularTextureIdx).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.normalsTextureIdx).c_str());
+                ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.bumpTextureIdx).c_str());
+            }
+            ImGui::EndTable();
+            PopStyleCompact();
+        }
+    }
+    if (ImGui::CollapsingHeader("Programs", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+    }
+    ImGui::End();
+}
+
 void Gui(App* app)
 {
     if (app->showDemoWindow)
@@ -230,6 +442,7 @@ void Gui(App* app)
     ImGui::Separator();
     EntityHierarchyGUI(app);
     ImGui::End();
+
 }
 
 void Update(App* app)
@@ -250,9 +463,8 @@ void Update(App* app)
         camera.ProcessMouseMovement(app->input.mouseDelta.x, -app->input.mouseDelta.y);
 
     // Update projection matrix after new camera inputs
-    app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySize.x / (float)app->displaySize.y, 0.1f, 100.0f);
+    app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySizeCurrent.x / (float)app->displaySizeCurrent.y, 0.1f, 100.0f);
 
-    //TextureSupport::ResizeTexture(app, app->textures[app->colorTextureIdx], app->displaySize.x, app->displaySize.y);
     // Programs hot reload
     CheckShadersHotReload(app);
 
@@ -266,18 +478,6 @@ void Update(App* app)
 
 void Render(App* app)
 {
-   
-    // glEnable(GL_DEPTH_TEST);
-    //
-    // glClearColor(0.1f, 0.258f, 0.8f, 1.0f);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //
-    // glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-    //
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
-
     switch (app->renderingMode) {
     case FORWARD:
         ForwardRender(app);
@@ -286,10 +486,7 @@ void Render(App* app)
         DeferredRender(app);
         break;
     }
-    
-    //ForwardRender(app);
-    //FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
-
+    ResourcesGUI(app);
 }
   
 void ForwardRender(App* app)
@@ -307,7 +504,7 @@ void ForwardRender(App* app)
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+    glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -362,7 +559,7 @@ void ForwardRender(App* app)
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+    glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     glDisable(GL_DEPTH_TEST);
     
     // Draw the framebuffer onto a quad that covers the whole screen.
@@ -523,6 +720,17 @@ void PushLightDataToShader(App* app)
         std::cout << "Global Params. " << " Offset: " << app->globalParamsOffset << " Size: " << app->globalParamsSize  << "\n";
 }
 
+void OnScreenResize(App* app)
+{
+    FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
+    TextureSupport::ResizeTexture(app, app->textures[app->colorTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, 0);
+    // FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle);
+    // FrameBufferManagement::CheckStatus();
+    // const std::vector<u32> attachments = {0};
+    // FrameBufferManagement::SetDrawBuffersTextures(attachments);
+    FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
+}
 
 void EditTransform(App* app, const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition)
 {
@@ -602,7 +810,7 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
     const ImGuiIO& io = ImGui::GetIO();
     float viewManipulateRight = io.DisplaySize.x;
     float viewManipulateTop = 0;
-    ImGuizmo::SetRect((float)app->displayPos.x, (float)app->displayPos.y, (float)app->displaySize.x, (float)app->displaySize.y);
+    ImGuizmo::SetRect((float)app->displayPos.x, (float)app->displayPos.y, (float)app->displaySizeCurrent.x, (float)app->displaySizeCurrent.y);
     //ImGuizmo::DrawGrid(cameraView, glm::value_ptr(app->projectionMat), glm::value_ptr(glm::mat4(1.0f)), 100.f);
     ImGuizmo::Manipulate(cameraView, glm::value_ptr(app->projectionMat), app->imGuizmoData.mCurrentGizmoOperation, app->imGuizmoData.mCurrentGizmoMode, glm::value_ptr(app->entities[selectedEntity]->worldMatrix), nullptr, app->imGuizmoData.useSnap ? &app->imGuizmoData.snap[0] : nullptr, app->imGuizmoData.boundSizing ? app->imGuizmoData.bounds : nullptr, app->imGuizmoData.boundSizingSnap ? app->imGuizmoData.boundsSnap : nullptr);
 
