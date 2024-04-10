@@ -74,7 +74,8 @@ u32 TextureSupport::LoadTexture2D(App* app, const char* filepath)
     }
     else
     {
-        return UINT32_MAX;
+        //return UINT32_MAX;
+        return app->defaultTexture;
     }
 }
 

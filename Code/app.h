@@ -13,16 +13,21 @@
 #include "ImGuizmo.h"
 
 static const char* RenderingModeStr[] = {"FORWARD", "DEFERRED"};
+
 enum RenderingMode
 {
     FORWARD,
     DEFERRED
 };
 
-enum Mode
+static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "FINAL"};
+
+enum GBufferMode
 {
-    Mode_TexturedQuad,
-    Mode_Count
+    COLOR,
+    NORMAL,
+    POSITION,
+    FINAL
 };
 
 struct ImGuizmoData 
@@ -59,10 +64,13 @@ struct App
     Buffer frameBufferObject;
     u32 colorTextureIdx;
     u32 depthTextureIdx;
+    u32 normalTextureIdx;
+    u32 positionTextureIdx;
     
     bool drawWireFrame = false;
-    RenderingMode renderingMode = RenderingMode::FORWARD;
-    
+    RenderingMode renderingMode = RenderingMode::DEFERRED;
+    GBufferMode gBufferMode = GBufferMode::COLOR;
+
     // Camera
     Camera camera;
     glm::mat4 projectionMat;
@@ -76,16 +84,13 @@ struct App
     std::vector<std::shared_ptr<Entity>> entities;
     std::vector<std::shared_ptr<Light>> lights;
     
-    // texture indices
-    u32 diceTexIdx;
-
-    // Mode
-    Mode mode;
+    // default
+    u32 defaultTexture;
+    u32 deferredProgramIdx;
 
     // Buffers
     Buffer uniformBuffer;
  
-    
     u32 globalParamsOffset = 0;
     u32 globalParamsSize = 0;
     
