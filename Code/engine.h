@@ -6,10 +6,6 @@
 
 #include "app.h"
 
-#define RT_LOCATION_COLOR 0
-#define RT_LOCATION_NORMALS 2
-#define RT_LOCATION_POSITION 4
-
 void Init(App* app);
 
 void Gui(App* app);

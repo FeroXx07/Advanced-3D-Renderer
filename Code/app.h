@@ -85,8 +85,8 @@ struct App
     std::vector<std::shared_ptr<Light>> lights;
     
     // default
-    u32 defaultTexture;
-    u32 deferredProgramIdx;
+    u32 defaultTextureIdx;
+    u32 deferredGeometryProgramIdx;
 
     // Buffers
     Buffer uniformBuffer;

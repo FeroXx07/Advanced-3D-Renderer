@@ -32,7 +32,7 @@ void Init(App* app)
     BufferManagement::InitUniformBuffer();
 
     // Default Texture loading
-    app->defaultTexture = TextureSupport::LoadTexture2D(app, "color_white.png");
+    app->defaultTextureIdx = TextureSupport::LoadTexture2D(app, "color_white.png");
 
     // Create uniform buffer
     app->uniformBuffer = CREATE_CONSTANT_BUFFER(BufferManagement::maxUniformBufferSize, nullptr);
@@ -40,16 +40,16 @@ void Init(App* app)
     // Create frame buffer and a color texture attachment
     app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
     app->colorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->normalTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->positionTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->normalTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->depthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, RT_LOCATION_COLOR);
-    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->normalTextureIdx].handle, RT_LOCATION_NORMALS);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->positionTextureIdx].handle, RT_LOCATION_POSITION);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->normalTextureIdx].handle, RT_LOCATION_NORMAL);
     FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle);
     FrameBufferManagement::CheckStatus();
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_NORMALS, RT_LOCATION_POSITION };
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     
@@ -63,6 +63,7 @@ void Init(App* app)
     const u32 unlitBaseProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_base.vert", "Shaders\\shader_unlit_base.frag", "UNLIT_BASE");
     const u32 unlitTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_textured.vert", "Shaders\\shader_unlit_textured.frag", "UNLIT_TEXTURED");
 
+    app->deferredGeometryProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_geometry_pass.vert", "Shaders\\shader_deferred_geometry_pass.frag", "DEFERRED_GEOMETRY_PASS");
     app->screenDisplayProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_screen.vert", "Shaders\\shader_unlit_screen.frag", "UNLIT_SCREEN");
     
     // Fill vertex shader layout auto
@@ -117,6 +118,8 @@ void Init(App* app)
 
     // Set camera intial pos
     app->camera.position = glm::vec3(-3.0f, 1.0f, 25.0f);
+
+    OnScreenResize(app);
 }
 
 void CameraGUI(App* app) {
@@ -139,11 +142,14 @@ void OpenGLContextGUI(App* app) {
     ImGui::Combo("Rendering Mode", &renderingModeSelection, RenderingModeStr, IM_ARRAYSIZE(RenderingModeStr));
     app->renderingMode = static_cast<RenderingMode>(renderingModeSelection);
 
-    // G Buffer Mode
-    int gBufferModeSelection = static_cast<int>(app->gBufferMode);
-    ImGui::Combo("Rendering Mode", &gBufferModeSelection, GBufferModeStr, IM_ARRAYSIZE(GBufferModeStr));
-    app->gBufferMode = static_cast<GBufferMode>(gBufferModeSelection);
-
+    if (renderingModeSelection == RenderingMode::DEFERRED)
+    {
+        // G Buffer Mode
+        int gBufferModeSelection = static_cast<int>(app->gBufferMode);
+        ImGui::Combo("G-Buffer Mode", &gBufferModeSelection, GBufferModeStr, IM_ARRAYSIZE(GBufferModeStr));
+        app->gBufferMode = static_cast<GBufferMode>(gBufferModeSelection);
+    }
+    
     // Full OpenGL & GLSL info dump
     ImGui::Separator();
     ImGui::Text("OpenGL Context");
@@ -359,6 +365,10 @@ void ResourcesGUI(const App* app)
     }
     if (ImGui::CollapsingHeader("Textures", ImGuiTreeNodeFlags_DefaultOpen))
     {
+        constexpr i32 minTexVisSize = 50;
+        constexpr i32 maxTexVisSize = 200;
+        static i32 textVisSize = 50;
+        ImGui::SliderInt("Texture visualization size", &textVisSize, minTexVisSize, maxTexVisSize);
         PushStyleCompact();
         static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
         if (ImGui::BeginTable("Textures table", 5, flags))
@@ -379,11 +389,11 @@ void ResourcesGUI(const App* app)
                 ImGui::TableNextColumn(); ImGui::Text((const char*)TextureTypeStr[(int)tex.type]);
                 ImGui::TableNextColumn(); ImGui::Text((const char*)tex.path.c_str());
                 ImGui::TableNextColumn();
-                ImVec2 uv_min = ImVec2(0.0f, 1.0f);                 // Top-left
-                ImVec2 uv_max = ImVec2(1.0f, 0.0f);                 // Lower-right
-                ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // No tint
-                ImVec4 border_col = ImGui::GetStyleColorVec4(ImGuiCol_Border);
-                ImGui::Image((void*)tex.handle, ImVec2(50, 50), uv_min, uv_max, tint_col, border_col);
+                constexpr ImVec2 uvMin = ImVec2(0.0f, 1.0f);                 // Top-left
+                constexpr ImVec2 uvMax = ImVec2(1.0f, 0.0f);                 // Lower-right
+                constexpr ImVec4 tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // No tint
+                ImVec4 borderCol = ImGui::GetStyleColorVec4(ImGuiCol_Border);
+                ImGui::Image((void*)tex.handle, ImVec2(textVisSize, textVisSize), uvMin, uvMax, tintCol, borderCol);
             }
             ImGui::EndTable();
             PopStyleCompact();
@@ -449,7 +459,6 @@ void Gui(App* app)
     ImGui::Separator();
     EntityHierarchyGUI(app);
     ImGui::End();
-
 }
 
 void Update(App* app)
@@ -545,7 +554,6 @@ void ForwardRender(App* app)
         const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
         for (u32 i = 0; i < subMeshCount; i++)
         {
-            SubMesh& subMesh = mesh.subMeshes[i];
             const u32 subMeshMaterialIdx = model.materialIdx[i];
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
             mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
@@ -581,7 +589,7 @@ void DeferredRender(App* app) {
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_NORMALS, RT_LOCATION_POSITION };
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
@@ -607,7 +615,7 @@ void DeferredRender(App* app) {
     BufferManagement::BindBufferRange(app->uniformBuffer, 0, app->globalParamsSize, app->globalParamsOffset);
 
     // Bind the deferred program
-    const Program& program = app->programs[app->deferredProgramIdx];
+    const Program& program = app->programs[app->deferredGeometryProgramIdx];
     app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
     glUseProgram(program.handle);
 
@@ -626,7 +634,6 @@ void DeferredRender(App* app) {
         const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
         for (u32 i = 0; i < subMeshCount; i++)
         {
-            SubMesh& subMesh = mesh.subMeshes[i];
             const u32 subMeshMaterialIdx = model.materialIdx[i];
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
             mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
@@ -643,9 +650,9 @@ void DeferredRender(App* app) {
     glDisable(GL_DEPTH_TEST);
 
     // Draw the framebuffer onto a quad that covers the whole screen.
-    const Program& program = app->programs[app->screenDisplayProgramIdx];
-    app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
-    glUseProgram(program.handle);
+    const Program& screenProgram = app->programs[app->screenDisplayProgramIdx];
+    app->defaultShaderProgram_uTexture = glGetUniformLocation(screenProgram.handle, "uTexture");
+    glUseProgram(screenProgram.handle);
     Model& model = app->models[app->quadModel];
     Mesh& mesh = app->meshes[model.meshIdx];
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, model.name.c_str());
@@ -660,13 +667,13 @@ void DeferredRender(App* app) {
         switch (app->gBufferMode)
         {
         case GBufferMode::COLOR:
-            gBufferModeIdx = subMeshMaterial.albedoTextureIdx;
+            gBufferModeIdx = app->colorTextureIdx;
             break;
         case GBufferMode::NORMAL:
-            gBufferModeIdx = subMeshMaterial.normalsTextureIdx;
+            gBufferModeIdx = app->normalTextureIdx;
             break;
         case GBufferMode::POSITION:
-            gBufferModeIdx = subMeshMaterial.albedoTextureIdx;
+            gBufferModeIdx = app->positionTextureIdx;
             break;
         case GBufferMode::FINAL:
             gBufferModeIdx = subMeshMaterial.albedoTextureIdx;
@@ -820,8 +827,11 @@ void PushLightDataToShader(App* app)
 
 void OnScreenResize(App* app)
 {
+    std::cout << "Screen resize" << "\n\n";
     //FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
-    //TextureSupport::ResizeTexture(app, app->textures[app->colorTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    TextureSupport::ResizeTexture(app, app->textures[app->colorTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    TextureSupport::ResizeTexture(app, app->textures[app->normalTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    TextureSupport::ResizeTexture(app, app->textures[app->positionTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     //FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, 0);
     //// FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle);
     //// FrameBufferManagement::CheckStatus();
@@ -905,9 +915,6 @@ void EditTransform(App* app, const float* cameraView, float* cameraProjection, f
     }
     
     // Imguizmo for transform
-    const ImGuiIO& io = ImGui::GetIO();
-    float viewManipulateRight = io.DisplaySize.x;
-    float viewManipulateTop = 0;
     ImGuizmo::SetRect((float)app->displayPos.x, (float)app->displayPos.y, (float)app->displaySizeCurrent.x, (float)app->displaySizeCurrent.y);
     //ImGuizmo::DrawGrid(cameraView, glm::value_ptr(app->projectionMat), glm::value_ptr(glm::mat4(1.0f)), 100.f);
     ImGuizmo::Manipulate(cameraView, glm::value_ptr(app->projectionMat), app->imGuizmoData.mCurrentGizmoOperation, app->imGuizmoData.mCurrentGizmoMode, glm::value_ptr(app->entities[selectedEntity]->worldMatrix), nullptr, app->imGuizmoData.useSnap ? &app->imGuizmoData.snap[0] : nullptr, app->imGuizmoData.boundSizing ? app->imGuizmoData.bounds : nullptr, app->imGuizmoData.boundSizingSnap ? app->imGuizmoData.boundsSnap : nullptr);

@@ -85,4 +85,11 @@ public:
 #define PUSH_MAT3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
 #define PUSH_MAT4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
 
+enum DRAW_BUFFERS_LOCATION
+{
+    RT_LOCATION_COLOR = 0,
+    RT_LOCATION_POSITION = 1,
+    RT_LOCATION_NORMAL = 2
+};
+
 #endif // BUFFER_MANAGEMENT_H
