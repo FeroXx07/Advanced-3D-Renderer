@@ -20,13 +20,14 @@ enum RenderingMode
     DEFERRED
 };
 
-static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "FINAL"};
+static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "DEPTH", "FINAL"};
 
 enum GBufferMode
 {
     COLOR,
     NORMAL,
     POSITION,
+    DEPTH,
     FINAL
 };
 
@@ -66,6 +67,7 @@ struct App
     u32 depthTextureIdx;
     u32 normalTextureIdx;
     u32 positionTextureIdx;
+    u32 finalResultTextureIdx;
     
     bool drawWireFrame = false;
     RenderingMode renderingMode = RenderingMode::DEFERRED;
@@ -87,6 +89,7 @@ struct App
     // default
     u32 defaultTextureIdx;
     u32 deferredGeometryProgramIdx;
+    u32 deferredShadingProgramIdx;
 
     // Buffers
     Buffer uniformBuffer;

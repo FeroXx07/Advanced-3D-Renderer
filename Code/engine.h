@@ -18,6 +18,12 @@ void ForwardRender(App* app);
 
 void DeferredRender(App* app);
 
+void DeferredRenderGeometryPass(App* app);
+
+void DeferredRenderShadingPass(App* app);
+
+void DeferredRenderDisplay(App* app);
+
 void CheckShadersHotReload(App* app);
 
 void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,

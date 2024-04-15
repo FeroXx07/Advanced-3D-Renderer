@@ -14,16 +14,17 @@ struct Image
 static const char* TextureTypeStr[] = {"COLOR", "DEPTH", "STENCIL"}; 
 enum class TextureType
 {
-    COLOR,
-    DEPTH,
-    STENCIL
+    NON_FBO,
+    FBO_COLOR,
+    FBO_DEPTH,
+    FBO_STENCIL
 };
 
 struct Texture
 {
     GLuint      handle;
     std::string path;
-    TextureType type = TextureType::COLOR;
+    TextureType type = TextureType::NON_FBO;
 };
 
 struct TextureSupport
@@ -36,7 +37,7 @@ struct TextureSupport
     static u32 CreateEmptyColorTexture(App* app, const char* name, const u32 width, const u32 height);
     static u32 CreateEmptyDepthTexture(App* app, const char* name, const u32 width, const u32 height);
 
-    static void ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight);
+    static void ResizeTexture(App* app, const Texture& texToResize, const u32 newWidth, const u32 newHeight);
 };
 
 #endif // TEXTURE_H

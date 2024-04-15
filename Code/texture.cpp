@@ -83,6 +83,7 @@ u32 TextureSupport::CreateEmptyColorTexture(App* app, const char* name, const u3
 {
     Texture tex = {};
     tex.path = name;
+    tex.type = TextureType::FBO_COLOR;
     
     glGenTextures(1, &tex.handle);
     glBindTexture(GL_TEXTURE_2D, tex.handle);
@@ -105,7 +106,8 @@ u32 TextureSupport::CreateEmptyDepthTexture(App* app, const char* name, const u3
 {
     Texture tex = {};
     tex.path = name;
-    
+    tex.type = TextureType::FBO_DEPTH;
+
     glGenTextures(1, &tex.handle);
     glBindTexture(GL_TEXTURE_2D, tex.handle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
@@ -114,6 +116,7 @@ u32 TextureSupport::CreateEmptyDepthTexture(App* app, const char* name, const u3
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     const u32 texIdx = static_cast<u32>(app->textures.size());
@@ -121,7 +124,7 @@ u32 TextureSupport::CreateEmptyDepthTexture(App* app, const char* name, const u3
 
     return texIdx;
 }
-void TextureSupport::ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight)
+void TextureSupport::ResizeTexture(App* app, const Texture& texToResize, const u32 newWidth, const u32 newHeight)
 {
     
     // ASSERT(texToResize.handle != 0, "Texture doesn't exist");
@@ -134,7 +137,8 @@ void TextureSupport::ResizeTexture(App* app, Texture& texToResize, const u32 new
     // texToResize.handle = 0;
     //
     switch (texToResize.type) {
-    case TextureType::COLOR: {
+    case TextureType::FBO_COLOR:
+        {
         glBindTexture(GL_TEXTURE_2D, texToResize.handle);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, newWidth, newHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -150,13 +154,21 @@ void TextureSupport::ResizeTexture(App* app, Texture& texToResize, const u32 new
         // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         // glGenerateMipmap(GL_TEXTURE_2D);
         // glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        break;
+    case TextureType::FBO_DEPTH:
+        {
+            glBindTexture(GL_TEXTURE_2D, texToResize.handle);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+        break;
+    case TextureType::FBO_STENCIL:
+        break;
+    default: ;
     }
-        break;
-    case TextureType::DEPTH:
-        break;
-    case TextureType::STENCIL:
-        break;
-    }
+    glBindTexture(GL_TEXTURE_2D, 0);
     //
     // // Release memory from old
     // glDeleteTextures(1, &texToResize.handle);

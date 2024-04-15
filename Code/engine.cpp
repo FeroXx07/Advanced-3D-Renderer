@@ -42,14 +42,17 @@ void Init(App* app)
     app->colorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->positionTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->normalTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->finalResultTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->depthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, RT_LOCATION_COLOR);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->positionTextureIdx].handle, RT_LOCATION_POSITION);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->normalTextureIdx].handle, RT_LOCATION_NORMAL);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->finalResultTextureIdx].handle, RT_LOCATION_FINAL_RESULT);
     FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle);
     FrameBufferManagement::CheckStatus();
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL };
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_FINAL_RESULT};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     
@@ -64,6 +67,8 @@ void Init(App* app)
     const u32 unlitTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_textured.vert", "Shaders\\shader_unlit_textured.frag", "UNLIT_TEXTURED");
 
     app->deferredGeometryProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_geometry_pass.vert", "Shaders\\shader_deferred_geometry_pass.frag", "DEFERRED_GEOMETRY_PASS");
+    app->deferredShadingProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_geometry_pass.vert", "Shaders\\shader_deferred_shading_pass.frag", "DEFERRED_SHADING_PASS");
+
     app->screenDisplayProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_screen.vert", "Shaders\\shader_unlit_screen.frag", "UNLIT_SCREEN");
     
     // Fill vertex shader layout auto
@@ -585,11 +590,18 @@ void ForwardRender(App* app)
 }
 
 void DeferredRender(App* app) {
+    DeferredRenderGeometryPass(app);
+    DeferredRenderShadingPass(app);
+    DeferredRenderDisplay(app);
+}
+
+void DeferredRenderGeometryPass(App* app)
+{
     // Render on this framebuffer render targets
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL };
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_FINAL_RESULT};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
@@ -644,6 +656,14 @@ void DeferredRender(App* app) {
     glPopDebugGroup();
 
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
+}
+
+void DeferredRenderShadingPass(App* app)
+{
+}
+
+void DeferredRenderDisplay(App* app)
+{
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
@@ -675,13 +695,16 @@ void DeferredRender(App* app) {
         case GBufferMode::POSITION:
             gBufferModeIdx = app->positionTextureIdx;
             break;
+        case GBufferMode::DEPTH:
+            gBufferModeIdx = app->depthTextureIdx;
+            break;
         case GBufferMode::FINAL:
-            gBufferModeIdx = subMeshMaterial.albedoTextureIdx;
+            gBufferModeIdx = app->finalResultTextureIdx; // Same as app->colorTextureIdx
             break;
         default:
             break;
         }
-        mesh.DrawSubMesh(i, app->textures[gBufferModeIdx], app->defaultShaderProgram_uTexture, program, false);
+        mesh.DrawSubMesh(i, app->textures[gBufferModeIdx], app->defaultShaderProgram_uTexture, screenProgram, false);
     }
     glPopDebugGroup();
 }
@@ -829,9 +852,14 @@ void OnScreenResize(App* app)
 {
     std::cout << "Screen resize" << "\n\n";
     //FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
-    TextureSupport::ResizeTexture(app, app->textures[app->colorTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    TextureSupport::ResizeTexture(app, app->textures[app->normalTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    TextureSupport::ResizeTexture(app, app->textures[app->positionTextureIdx], app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+
+    // Resizing only for IMGUI shader. Engine application shaders work fine but IMGUI needs resizing.
+    for (u32 i = 0; i < app->textures.size(); ++i)
+    {
+        Texture& tex = app->textures[i];
+        if (tex.type != TextureType::NON_FBO)
+            TextureSupport::ResizeTexture(app, tex, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    }
     //FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, 0);
     //// FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle);
     //// FrameBufferManagement::CheckStatus();

@@ -36,17 +36,9 @@ layout(binding = 1, std140) uniform LocalParams
 layout(location = 0) out vec4 rt0; // Color -> drawBuffers[0] = GL_COLOR_ATTACHMENT#; where # = n  refers to a texture in a frame buffer
 layout(location = 1) out vec4 rt1; // Position
 layout(location = 2) out vec4 rt2; // Normals
-layout(location = 3) out vec4 rt3; // Emissive + lightmaps
-layout(location = 4) out vec4 rt4; // Specular, roughness
-
-float near = 0.1; 
-float far  = 100.0; 
-  
-float LinearizeDepth(float depth) 
-{
-    float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));	
-}
+//layout(location = 3) out vec4 rt3; // Emissive + lightmaps
+//layout(location = 4) out vec4 rt4; // Specular, roughness
+layout(location = 5) out vec4 rt3; // Final result
 
 void main()
 {
