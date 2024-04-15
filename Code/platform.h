@@ -149,3 +149,5 @@ inline std::string convertOpenGLDataTypeToString(u32 dataType) {
     default: return "Unknown";
     }
 }
+
+void SetupImGuiStyle();
