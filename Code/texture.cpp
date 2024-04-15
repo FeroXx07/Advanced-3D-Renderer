@@ -1,4 +1,7 @@
 ﻿#include "texture.h"
+
+#include <glm/gtx/string_cast.hpp>
+
 #include "app.h"
 #include "stb_image.h"
 
@@ -65,8 +68,9 @@ u32 TextureSupport::LoadTexture2D(App* app, const char* filepath)
         Texture tex = {};
         tex.handle = CreateTexture2DFromImage(image);
         tex.path = filepath;
-
-        const u32 texIdx = (u32)app->textures.size();
+        tex.size = image.size;
+        
+        const u32 texIdx = static_cast<u32>(app->textures.size());
         app->textures.push_back(tex);
 
         FreeImage(image);
@@ -84,6 +88,8 @@ u32 TextureSupport::CreateEmptyColorTexture(App* app, const char* name, const u3
     Texture tex = {};
     tex.path = name;
     tex.type = TextureType::FBO_COLOR;
+    tex.size.x = static_cast<i32>(width);
+    tex.size.y = static_cast<i32>(height);
     
     glGenTextures(1, &tex.handle);
     glBindTexture(GL_TEXTURE_2D, tex.handle);
@@ -107,7 +113,9 @@ u32 TextureSupport::CreateEmptyDepthTexture(App* app, const char* name, const u3
     Texture tex = {};
     tex.path = name;
     tex.type = TextureType::FBO_DEPTH;
-
+    tex.size.x = static_cast<i32>(width);
+    tex.size.y = static_cast<i32>(height);
+    
     glGenTextures(1, &tex.handle);
     glBindTexture(GL_TEXTURE_2D, tex.handle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
@@ -124,7 +132,7 @@ u32 TextureSupport::CreateEmptyDepthTexture(App* app, const char* name, const u3
 
     return texIdx;
 }
-void TextureSupport::ResizeTexture(App* app, const Texture& texToResize, const u32 newWidth, const u32 newHeight)
+void TextureSupport::ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight)
 {
     
     // ASSERT(texToResize.handle != 0, "Texture doesn't exist");
@@ -140,7 +148,7 @@ void TextureSupport::ResizeTexture(App* app, const Texture& texToResize, const u
     case TextureType::FBO_COLOR:
         {
         glBindTexture(GL_TEXTURE_2D, texToResize.handle);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, newWidth, newHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         // Create a new texture image 2d
@@ -168,6 +176,8 @@ void TextureSupport::ResizeTexture(App* app, const Texture& texToResize, const u
         break;
     default: ;
     }
+    texToResize.size.x = static_cast<i32>(newWidth);
+    texToResize.size.y = static_cast<i32>(newHeight);
     glBindTexture(GL_TEXTURE_2D, 0);
     //
     // // Release memory from old
@@ -175,4 +185,22 @@ void TextureSupport::ResizeTexture(App* app, const Texture& texToResize, const u
     //
     // // Assign the handle of new to the old
     // texToResize.handle = resizedTexHandle;
+}
+std::string TextureSupport::GetInfoString(const Texture& tex)
+{
+    std::string info = "Size: ";
+    info += glm::to_string(tex.size);
+    info += ", ";
+    info += "Bytes size: ";
+    float sizeBytes = 0;
+    if (tex.type != TextureType::FBO_DEPTH)
+    {
+        sizeBytes = static_cast<float>(tex.size.x) * static_cast<float>(tex.size.y) * 4.0f/1000000.0f; // 4 bits per channel = 1 byte per channel (4 channels) from bytes to megabytes
+    }
+    else
+    {
+        sizeBytes = static_cast<float>(tex.size.x) * static_cast<float>(tex.size.y) * 3.0f/1000000.0f; // 24 bits per channel, single channel, conversion from bytes to megabytes
+    }
+    info += std::to_string(sizeBytes);
+    return info;
 }

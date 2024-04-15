@@ -25,6 +25,7 @@ struct Texture
     GLuint      handle;
     std::string path;
     TextureType type = TextureType::NON_FBO;
+    ivec2 size;
 };
 
 struct TextureSupport
@@ -37,7 +38,9 @@ struct TextureSupport
     static u32 CreateEmptyColorTexture(App* app, const char* name, const u32 width, const u32 height);
     static u32 CreateEmptyDepthTexture(App* app, const char* name, const u32 width, const u32 height);
 
-    static void ResizeTexture(App* app, const Texture& texToResize, const u32 newWidth, const u32 newHeight);
+    static void ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight);
+
+    static std::string GetInfoString(const Texture& tex);
 };
 
 #endif // TEXTURE_H

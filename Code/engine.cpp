@@ -399,6 +399,9 @@ void ResourcesGUI(const App* app)
                 constexpr ImVec4 tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // No tint
                 ImVec4 borderCol = ImGui::GetStyleColorVec4(ImGuiCol_Border);
                 ImGui::Image((void*)tex.handle, ImVec2(textVisSize, textVisSize), uvMin, uvMax, tintCol, borderCol);
+                ImGui::SameLine();
+                std::string info = TextureSupport::GetInfoString(tex);
+                ImGui::Text(info.c_str());
             }
             ImGui::EndTable();
             PopStyleCompact();
@@ -679,9 +682,6 @@ void DeferredRenderDisplay(App* app)
     const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
     for (u32 i = 0; i < subMeshCount; i++)
     {
-        const u32 subMeshMaterialIdx = model.materialIdx[i];
-        const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
-
         // Draw the framebuffer onto a quad that covers the whole screen.
         u32 gBufferModeIdx = 0;
         switch (app->gBufferMode)
