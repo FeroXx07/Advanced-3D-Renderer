@@ -32,9 +32,11 @@ void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientat
 void CreateLight(App* app, LightType lightType, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,
     const u32 modelIndex, const u32 programIdx = 0, const glm::vec4& lightColor = glm::vec4(1.0f), const char* name = "None");
 
-void PushTransformDataToShader(App* app);
+void PushTransformUBO(App* app);
 
-void PushLightDataToShader(App* app);
+void PushLightDataUBO(App* app);
+
+void PushMaterialDataUBO(App* app);
 
 void OnScreenResize(App* app);
 

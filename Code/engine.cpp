@@ -39,18 +39,18 @@ void Init(App* app)
 
     // Create frame buffer and a color texture attachment
     app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
-    app->colorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->positionTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->normalTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->finalResultTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->depthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gColorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gPositionTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gNormalTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gDepthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
-    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->colorTextureIdx].handle, RT_LOCATION_COLOR);
-    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->positionTextureIdx].handle, RT_LOCATION_POSITION);
-    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->normalTextureIdx].handle, RT_LOCATION_NORMAL);
-    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->finalResultTextureIdx].handle, RT_LOCATION_FINAL_RESULT);
-    FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->depthTextureIdx].handle);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gColorTextureIdx].handle, RT_LOCATION_COLOR);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gPositionTextureIdx].handle, RT_LOCATION_POSITION);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gNormalTextureIdx].handle, RT_LOCATION_NORMAL);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gFinalResultTextureIdx].handle, RT_LOCATION_FINAL_RESULT);
+    FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->gDepthTextureIdx].handle);
     FrameBufferManagement::CheckStatus();
     const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_FINAL_RESULT};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
@@ -67,7 +67,7 @@ void Init(App* app)
     const u32 unlitTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_textured.vert", "Shaders\\shader_unlit_textured.frag", "UNLIT_TEXTURED");
 
     app->deferredGeometryProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_geometry_pass.vert", "Shaders\\shader_deferred_geometry_pass.frag", "DEFERRED_GEOMETRY_PASS");
-    app->deferredShadingProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_geometry_pass.vert", "Shaders\\shader_deferred_shading_pass.frag", "DEFERRED_SHADING_PASS");
+    app->deferredShadingProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_shading_pass.vert", "Shaders\\shader_deferred_shading_pass.frag", "DEFERRED_SHADING_PASS");
 
     app->screenDisplayProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_screen.vert", "Shaders\\shader_unlit_screen.frag", "UNLIT_SCREEN");
     
@@ -495,8 +495,9 @@ void Update(App* app)
     // Uniform buffers push
     Buffer& uniformBuffer = app->uniformBuffer;
     BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
-    PushTransformDataToShader(app);
-    PushLightDataToShader(app);
+    PushTransformUBO(app);
+    PushLightDataUBO(app);
+    PushMaterialDataUBO(app);
     BufferManagement::UnmapBuffer(uniformBuffer);
 }
 
@@ -515,6 +516,8 @@ void Render(App* app)
   
 void ForwardRender(App* app)
 {
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
+
     // Render on this framebuffer render targets
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
@@ -522,7 +525,6 @@ void ForwardRender(App* app)
     const std::vector<u32> attachments = { 0 };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
     glEnable(GL_DEPTH_TEST);
     
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -542,7 +544,7 @@ void ForwardRender(App* app)
             // - bind the vao
             // - glDrawElements() !!!
 
-    BufferManagement::BindBufferRange(app->uniformBuffer, 0, app->globalParamsSize, app->globalParamsOffset);
+    BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_GLOBAL_PARAMS, app->globalParamsSize, app->globalParamsOffset);
 
     const u32 entityCount = static_cast<u32>(app->entities.size());
     for (u32 e = 0; e < entityCount; ++e)
@@ -552,7 +554,7 @@ void ForwardRender(App* app)
         const Program& program = app->programs[entity.programIndex];
         app->defaultShaderProgram_uTexture = glGetUniformLocation(program.handle, "uTexture");
         glUseProgram(program.handle);
-        BufferManagement::BindBufferRange(app->uniformBuffer, 1, entity.localParamsSize, entity.localParamsOffset);
+        BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_LOCAL_PARAMS, entity.localParamsSize, entity.localParamsOffset);
 
         Model& model = app->models[entity.modelIndex];
         Mesh& mesh = app->meshes[model.meshIdx];
@@ -564,6 +566,7 @@ void ForwardRender(App* app)
         {
             const u32 subMeshMaterialIdx = model.materialIdx[i];
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+            BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
             mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
         }
         glPopDebugGroup();
@@ -587,6 +590,7 @@ void ForwardRender(App* app)
     {
         const u32 subMeshMaterialIdx = model.materialIdx[i];
         const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+        BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
         mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
     }
     glPopDebugGroup();
@@ -600,6 +604,8 @@ void DeferredRender(App* app) {
 
 void DeferredRenderGeometryPass(App* app)
 {
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Geometry");
+
     // Render on this framebuffer render targets
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
@@ -607,7 +613,6 @@ void DeferredRenderGeometryPass(App* app)
     const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_FINAL_RESULT};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
     glEnable(GL_DEPTH_TEST);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -627,7 +632,7 @@ void DeferredRenderGeometryPass(App* app)
     // - bind the vao
     // - glDrawElements() !!!
 
-    BufferManagement::BindBufferRange(app->uniformBuffer, 0, app->globalParamsSize, app->globalParamsOffset);
+    BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_GLOBAL_PARAMS, app->globalParamsSize, app->globalParamsOffset);
 
     // Bind the deferred program
     const Program& program = app->programs[app->deferredGeometryProgramIdx];
@@ -639,7 +644,7 @@ void DeferredRenderGeometryPass(App* app)
     {
         const Entity& entity = *app->entities[e];
 
-        BufferManagement::BindBufferRange(app->uniformBuffer, 1, entity.localParamsSize, entity.localParamsOffset);
+        BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_LOCAL_PARAMS, entity.localParamsSize, entity.localParamsOffset);
 
         Model& model = app->models[entity.modelIndex];
         Mesh& mesh = app->meshes[model.meshIdx];
@@ -651,6 +656,7 @@ void DeferredRenderGeometryPass(App* app)
         {
             const u32 subMeshMaterialIdx = model.materialIdx[i];
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+            BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
             mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
         }
 
@@ -663,15 +669,70 @@ void DeferredRenderGeometryPass(App* app)
 
 void DeferredRenderShadingPass(App* app)
 {
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Shader");
+    // Render on this framebuffer render targets
+    FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
+
+    // Select on which render targets to draw
+    const std::vector<u32> attachments = { RT_LOCATION_FINAL_RESULT};
+    FrameBufferManagement::SetDrawBuffersTextures(attachments);
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // - clear the framebuffer
+    // - set the viewport
+    // - set the blending state
+    // - bind the texture into unit 0
+    // - bind the program 
+    //   (...and make its texture sample from unit 0)
+    // - bind the vao
+    // - glDrawElements() !!!
+
+    BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_GLOBAL_PARAMS, app->globalParamsSize, app->globalParamsOffset);
+
+    // Bind the deferred program
+    const Program& program = app->programs[app->deferredShadingProgramIdx];
+    glUseProgram(program.handle);
+
+    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL };
+    const std::vector<u32> texturesUniformHandles = { app->textures[app->gColorTextureIdx].handle, app->textures[app->gPositionTextureIdx].handle,
+        app->textures[app->gNormalTextureIdx].handle};
+    
+    Model& model = app->models[app->quadModel];
+    Mesh& mesh = app->meshes[model.meshIdx];
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, model.name.c_str());
+    const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
+    for (u32 i = 0; i < subMeshCount; i++)
+    {
+        const u32 subMeshMaterialIdx = model.materialIdx[i];
+        const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+        BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
+        mesh.DrawSubMesh(i, texturesUniformHandles, texturesUniformLocations, program, false);
+    }
+    FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
+    glDepthMask(GL_TRUE);
+    glPopDebugGroup();
+    glPopDebugGroup();
 }
 
 void DeferredRenderDisplay(App* app)
 {
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Display");
+
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     glDisable(GL_DEPTH_TEST);
-
+    
     // Draw the framebuffer onto a quad that covers the whole screen.
     const Program& screenProgram = app->programs[app->screenDisplayProgramIdx];
     app->defaultShaderProgram_uTexture = glGetUniformLocation(screenProgram.handle, "uTexture");
@@ -687,25 +748,29 @@ void DeferredRenderDisplay(App* app)
         switch (app->gBufferMode)
         {
         case GBufferMode::COLOR:
-            gBufferModeIdx = app->colorTextureIdx;
+            gBufferModeIdx = app->gColorTextureIdx;
             break;
         case GBufferMode::NORMAL:
-            gBufferModeIdx = app->normalTextureIdx;
+            gBufferModeIdx = app->gNormalTextureIdx;
             break;
         case GBufferMode::POSITION:
-            gBufferModeIdx = app->positionTextureIdx;
+            gBufferModeIdx = app->gPositionTextureIdx;
             break;
         case GBufferMode::DEPTH:
-            gBufferModeIdx = app->depthTextureIdx;
+            gBufferModeIdx = app->gDepthTextureIdx;
             break;
         case GBufferMode::FINAL:
-            gBufferModeIdx = app->finalResultTextureIdx; // Same as app->colorTextureIdx
+            gBufferModeIdx = app->gFinalResultTextureIdx; // Same as app->colorTextureIdx
             break;
         default:
             break;
         }
+        const u32 subMeshMaterialIdx = model.materialIdx[i];
+        const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+        BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
         mesh.DrawSubMesh(i, app->textures[gBufferModeIdx], app->defaultShaderProgram_uTexture, screenProgram, false);
     }
+    glPopDebugGroup();
     glPopDebugGroup();
 }
 
@@ -787,7 +852,7 @@ void CreateLight(App* app, LightType lightType, const glm::vec3& position, const
     app->lights.emplace_back(light);
 }
 
-void PushTransformDataToShader(App* app)
+void PushTransformUBO(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
     
@@ -819,7 +884,7 @@ void PushTransformDataToShader(App* app)
     if (app->debugUBO)
         std::cout << "\n";
 }
-void PushLightDataToShader(App* app)
+void PushLightDataUBO(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
 
@@ -846,6 +911,27 @@ void PushLightDataToShader(App* app)
 
     if (app->debugUBO)
         std::cout << "Global Params. " << " Offset: " << app->globalParamsOffset << " Size: " << app->globalParamsSize  << "\n";
+}
+void PushMaterialDataUBO(App* app)
+{
+    for (u32 i = 0; i < app->materials.size(); ++i)
+    {
+        Material& material = app->materials[i];
+        Buffer& uniformBuffer = app->uniformBuffer;
+
+        // Set buffer block start and set offset
+        BufferManagement::SetBufferBlockStart(uniformBuffer, BufferManagement::uniformBlockAlignment, material.paramsOffset);
+        PUSH_VEC3(uniformBuffer, material.albedo);
+        PUSH_VEC3(uniformBuffer, material.emissive);
+        PUSH_FLOAT(uniformBuffer, material.smoothness);
+        PUSH_U_INT(uniformBuffer, (material.albedoTextureIdx != 0) ? true : false); 
+        PUSH_U_INT(uniformBuffer, (material.emissiveTextureIdx != 0) ? true : false); 
+        PUSH_U_INT(uniformBuffer, (material.specularTextureIdx != 0) ? true : false); 
+        PUSH_U_INT(uniformBuffer, (material.normalsTextureIdx != 0) ? true : false); 
+        PUSH_U_INT(uniformBuffer, (material.bumpTextureIdx != 0) ? true : false); 
+        // Set buffer block end and set size
+        BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, material.paramsSize, material.paramsOffset);
+    }
 }
 
 void OnScreenResize(App* app)

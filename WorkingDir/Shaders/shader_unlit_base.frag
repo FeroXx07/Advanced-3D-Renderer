@@ -15,6 +15,18 @@ struct Light
 	vec3 position;				
 };
 
+struct Material
+{
+	vec3 albedo;
+	vec3 emissive;
+	float smoothness;
+	bool hasAlbedoTexture;
+	bool hasEmissiveTexture;
+	bool hasSpecularTexture;
+	bool hasNormalsTexture;
+	bool hasBumpTexture;
+};
+
 layout (binding = 0, std140) uniform GlobalParams
 {
 	vec3 uCameraPosition;     		
@@ -28,6 +40,11 @@ layout(binding = 1, std140) uniform LocalParams
 	mat4 uWorldMatrix;
 	mat4 uWorldViewProjectionMatrix;
 	mat3 uNormalMatrix;
+};
+
+layout(binding = 2, std140) uniform MaterialParams
+{
+	Material material;
 };
 
 layout(location = 0) out vec4 oColor;

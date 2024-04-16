@@ -84,6 +84,7 @@ public:
 #define PUSH_VEC4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
 #define PUSH_MAT3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
 #define PUSH_MAT4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
+#define PUSH_FLOAT(buffer, value) { f32 v = value; BufferManagement::PushAlignedData(buffer, &v, sizeof(v), BASIC_MACHINE_UNIT); }
 
 enum DRAW_BUFFERS_LOCATION
 {
@@ -93,6 +94,13 @@ enum DRAW_BUFFERS_LOCATION
     // RT_LOCATION_EMISSIVE_LIGHTMAPS = 3,
     // RT_LOCATION_SPECULAR_ROUGHNESS = 4,
     RT_LOCATION_FINAL_RESULT = 3
+};
+
+enum STD_140_BINDING_POINT
+{
+    BP_GLOBAL_PARAMS = 0,
+    BP_LOCAL_PARAMS = 1,
+    BP_MATERIAL_PARAMS = 2
 };
 
 #endif // BUFFER_MANAGEMENT_H

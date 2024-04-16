@@ -63,11 +63,11 @@ struct App
     u32 quadModel;
     u32 screenDisplayProgramIdx;
     Buffer frameBufferObject;
-    u32 colorTextureIdx;
-    u32 depthTextureIdx;
-    u32 normalTextureIdx;
-    u32 positionTextureIdx;
-    u32 finalResultTextureIdx;
+    u32 gColorTextureIdx;
+    u32 gDepthTextureIdx;
+    u32 gNormalTextureIdx;
+    u32 gPositionTextureIdx;
+    u32 gFinalResultTextureIdx;
     
     bool drawWireFrame = false;
     RenderingMode renderingMode = RenderingMode::DEFERRED;

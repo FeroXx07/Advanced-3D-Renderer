@@ -7,7 +7,7 @@ layout(location = 2) in vec2 sTextCoord;
 //layout(location = 4) in vec3 sBitangent;
 layout(location = 5) in vec2 sViewDir; // In worldspace
 
-uniform sampler2D uTexture; // www.khronos.org/opengl/wiki/Uniform_(GLSL)
+layout (binding = 0) uniform sampler2D uTexture; // www.khronos.org/opengl/wiki/Uniform_(GLSL)
 
 struct Light					
 {
@@ -15,6 +15,18 @@ struct Light
 	vec3 color;					
 	vec3 direction;				
 	vec3 position;				
+};
+
+struct Material
+{
+	vec3 albedo;
+	vec3 emissive;
+	float smoothness;
+	bool hasAlbedoTexture;
+	bool hasEmissiveTexture;
+	bool hasSpecularTexture;
+	bool hasNormalsTexture;
+	bool hasBumpTexture;
 };
 
 layout (binding = 0, std140) uniform GlobalParams
@@ -32,6 +44,11 @@ layout(binding = 1, std140) uniform LocalParams
 	mat3 uNormalMatrix;
 };
 
+layout(binding = 2, std140) uniform MaterialParams
+{
+	Material material;
+};
+
 // location in this context are the indices of the draw buffers array.
 layout(location = 0) out vec4 rt0; // Color -> drawBuffers[0] = GL_COLOR_ATTACHMENT#; where # = n  refers to a texture in a frame buffer
 layout(location = 1) out vec4 rt1; // Position
@@ -39,19 +56,9 @@ layout(location = 2) out vec4 rt2; // Normals
 layout(location = 3) out vec4 rt3; // Emissive + lightmaps
 layout(location = 4) out vec4 rt4; // Specular, roughness
 
-float near = 0.1; 
-float far  = 100.0; 
-  
-float LinearizeDepth(float depth) 
-{
-    float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));	
-}
-
 void main()
 {
     rt0 = texture(uTexture, sTextCoord);
 	rt1 = vec4(sPosition, 1.0);
 	rt2 = vec4(sNormal, 1.0);
-	rt3 = texture(uTexture, sTextCoord);
 }

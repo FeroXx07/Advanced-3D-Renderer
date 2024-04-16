@@ -31,7 +31,7 @@ inline u32 CreateSampleMesh(App* app)
     Material& material = app->materials.back();
     material.name = "Quad_Mat";
     material.albedo = glm::vec3(255);
-    material.albedoTextureIdx = app->colorTextureIdx;
+    material.albedoTextureIdx = app->gColorTextureIdx;
     model.materialIdx.push_back(app->materials.size() - 1);
     // Geometry (vertex buffer object & element buffer object, gpu side)
     mesh.vertexBuffer = CREATE_STATIC_VERTEX_BUFFER(sizeof(vertices), (void*)vertices);
