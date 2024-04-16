@@ -11,9 +11,12 @@ struct Light
 	uint type;			
 	vec3 color;					
 	vec3 direction;				
-	vec3 position;				
+	vec3 position;			
+	float constant;
+    float linear;
+    float quadratic;
+	float radius;	
 };
-
 struct Material
 {
 	vec3 albedo;
@@ -53,5 +56,7 @@ layout(location = 2) out vec2 vTextCoord; // In worldspace
 layout(location = 5) out vec3 vViewDir; // In worldspace
 
 void main() {
+	vTextCoord = aTextCoord;
+	vViewDir = uCameraPosition - vPosition;
     gl_Position = vec4(aPosition, 1.0);
 }

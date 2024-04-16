@@ -191,7 +191,7 @@ std::string TextureSupport::GetInfoString(const Texture& tex)
     std::string info = "Size: ";
     info += glm::to_string(tex.size);
     info += ", ";
-    info += "Bytes size: ";
+    info += "Mega bytes size: ";
     float sizeBytes = 0;
     if (tex.type != TextureType::FBO_DEPTH)
     {

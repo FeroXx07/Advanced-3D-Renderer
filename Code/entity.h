@@ -10,6 +10,8 @@ enum class EntityType
 
 struct Entity
 {
+    virtual ~Entity() {}
+
     std::string name;
     EntityType eType = EntityType::BASE;
     

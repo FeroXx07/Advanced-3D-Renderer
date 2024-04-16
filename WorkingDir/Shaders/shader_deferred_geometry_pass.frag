@@ -5,7 +5,7 @@ layout(location = 1) in vec3 sNormal; // In worldspace
 layout(location = 2) in vec2 sTextCoord; 
 //layout(location = 3) in vec3 sTangent;
 //layout(location = 4) in vec3 sBitangent;
-layout(location = 5) in vec2 sViewDir; // In worldspace
+layout(location = 5) in vec3 sViewDir; // In worldspace
 
 layout (binding = 0) uniform sampler2D uTexture; // www.khronos.org/opengl/wiki/Uniform_(GLSL)
 
@@ -14,7 +14,11 @@ struct Light
 	uint type;			
 	vec3 color;					
 	vec3 direction;				
-	vec3 position;				
+	vec3 position;			
+	float constant;
+    float linear;
+    float quadratic;
+	float radius;	
 };
 
 struct Material

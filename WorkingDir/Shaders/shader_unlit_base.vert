@@ -11,7 +11,11 @@ struct Light
 	uint type;			
 	vec3 color;					
 	vec3 direction;				
-	vec3 position;				
+	vec3 position;			
+	float constant;
+    float linear;
+    float quadratic;
+	float radius;	
 };
 
 struct Material

@@ -29,7 +29,7 @@ void CheckShadersHotReload(App* app);
 void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,
     const u32 modelIndex, const u32 programIdx = 0, const glm::vec4& diffuseColor = glm::vec4(1.0f), const char* name = "None");
 
-void CreateLight(App* app, LightType lightType, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,
+void CreateLight(App* app, LightType lightType, const Attenuation& attenuation, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,
     const u32 modelIndex, const u32 programIdx = 0, const glm::vec4& lightColor = glm::vec4(1.0f), const char* name = "None");
 
 void PushTransformUBO(App* app);

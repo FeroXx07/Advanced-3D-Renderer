@@ -71,7 +71,7 @@ struct App
     
     bool drawWireFrame = false;
     RenderingMode renderingMode = RenderingMode::DEFERRED;
-    GBufferMode gBufferMode = GBufferMode::COLOR;
+    GBufferMode gBufferMode = GBufferMode::FINAL;
 
     // Camera
     Camera camera;

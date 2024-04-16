@@ -113,10 +113,12 @@ void Init(App* app)
          ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
      CreateEntity(app, glm::vec3(6.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    
+
+    Attenuation attenuation = {};
+
     // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
      //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
-    CreateLight(app, LightType::POINT, glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
        ,cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light");
     // CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
     //    ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
@@ -211,6 +213,14 @@ void EntityTransformGUI(App* app)
     {
         Entity& entity = *app->entities[selectedEntity];
         EditTransform(app, glm::value_ptr(app->camera.GetViewMatrix()), glm::value_ptr(app->projectionMat), glm::value_ptr(entity.worldMatrix), true);
+
+        // Light input
+        if (auto light = std::dynamic_pointer_cast<Light>(app->entities[selectedEntity]))
+        {
+            ImGui::InputFloat("Attenuation constant", &light->attenuation.constant);
+            ImGui::InputFloat("Attenuation linear", &light->attenuation.linear);
+            ImGui::InputFloat("Attenuation quadratic", &light->attenuation.quadratic);
+        }
     }
 }
 
@@ -826,11 +836,13 @@ void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientat
     app->entities.emplace_back(entity);
 }
 
-void CreateLight(App* app, LightType lightType, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale, const u32 modelIndex, const u32 programIdx, const glm::vec4& lightColor, const char* name)
+void CreateLight(App* app, LightType lightType, const Attenuation& attenuation, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale, const u32 modelIndex, const u32 programIdx, const glm::vec4& lightColor, const char* name)
 {
     std::shared_ptr<Light> light = std::make_shared<Light>();
     light->type = lightType;
     light->eType = EntityType::LIGHT;
+    light->attenuation = attenuation;
+    light->attenuation.CalculateRadius(lightColor);
     
     light->name = name;
     
@@ -899,11 +911,17 @@ void PushLightDataUBO(App* app)
         // Correct if necessary the alignment of array 
         BufferManagement::AlignHead(uniformBuffer, 4 * BASIC_MACHINE_UNIT);
 
-        const Light& light = *app->lights[i];
+        Light& light = *app->lights[i];
+        light.attenuation.CalculateRadius(light.color);
+        
         PUSH_U_INT(uniformBuffer, (u32)light.type)
         PUSH_VEC3(uniformBuffer, light.color);
         PUSH_VEC3(uniformBuffer, light.orientationEuler);
         PUSH_VEC3(uniformBuffer, light.position);
+        PUSH_FLOAT(uniformBuffer, light.attenuation.constant);
+        PUSH_FLOAT(uniformBuffer, light.attenuation.linear);
+        PUSH_FLOAT(uniformBuffer, light.attenuation.quadratic);
+        PUSH_FLOAT(uniformBuffer, light.attenuation.radius);
     }
 
     // Set buffer block end and set size
