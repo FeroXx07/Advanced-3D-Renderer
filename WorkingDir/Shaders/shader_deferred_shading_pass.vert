@@ -57,6 +57,5 @@ layout(location = 5) out vec3 vViewDir; // In worldspace
 
 void main() {
 	vTextCoord = aTextCoord;
-	vViewDir = uCameraPosition - vPosition;
     gl_Position = vec4(aPosition, 1.0);
 }

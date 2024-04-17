@@ -114,6 +114,24 @@ void Init(App* app)
      CreateEntity(app, glm::vec3(6.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
 
+    CreateEntity(app, glm::vec3(-12.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(-6.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(6.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+
+    CreateEntity(app, glm::vec3(-12.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(-6.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(0.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    CreateEntity(app, glm::vec3(6.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+
     Attenuation attenuation = {};
 
     // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)

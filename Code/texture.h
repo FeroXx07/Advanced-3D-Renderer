@@ -11,7 +11,7 @@ struct Image
     i32   stride;
 };
 
-static const char* TextureTypeStr[] = {"COLOR", "DEPTH", "STENCIL"}; 
+static const char* TextureTypeStr[] = {"NON_FBO", "COLOR", "DEPTH", "STENCIL"}; 
 enum class TextureType
 {
     NON_FBO,

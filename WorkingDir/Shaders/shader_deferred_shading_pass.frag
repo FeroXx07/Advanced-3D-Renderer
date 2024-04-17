@@ -85,7 +85,7 @@ void main()
 		 // diffuse
 		vec3 lightDir = normalize(uLight[i].position - fragPos);  
 		float diff = max(dot(normal, lightDir), 0.0); // Clamp to 0.0
-		vec3 diffuse = diff * albedo * uLight[i].color;
+		vec3 diffuse = diff * uLight[i].color;
 		
 		// specular
 		vec3 halfwayDir = normalize(lightDir + nViewDir);  
@@ -97,7 +97,7 @@ void main()
 		float attenuation = 1.0 / (1.0 + uLight[i].linear * distance + uLight[i].quadratic * distance * distance);
 		//diffuse *= attenuation;
 		//specular *= attenuation;
-		result += diffuse + specular;
+		result += (diffuse /*+ specular*/);
 	}
 	
 	rt0 = vec4(result, 1.0);
