@@ -65,8 +65,8 @@ layout(location = 0) out vec4 rt0; // Color -> drawBuffers[0] = GL_COLOR_ATTACHM
 
 void main()
 {
-    vec3 fragPos = texture(uTextureNormals, sTextCoord).rgb;
-    vec3 normal = texture(uTexturePosition, sTextCoord).rgb;
+    vec3 fragPos = texture(uTexturePosition, sTextCoord).rgb;
+    vec3 normal = texture(uTextureNormals, sTextCoord).rgb;
     vec3 albedo = texture(uTextureColor, sTextCoord).rgb;
 	
     float specularStrength = 0.8;
