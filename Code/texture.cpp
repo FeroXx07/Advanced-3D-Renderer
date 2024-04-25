@@ -83,17 +83,42 @@ u32 TextureSupport::LoadTexture2D(App* app, const char* filepath)
     }
 }
 
-u32 TextureSupport::CreateEmptyColorTexture(App* app, const char* name, const u32 width, const u32 height)
+u32 TextureSupport::CreateEmptyColorTexture8Bit(App* app, const char* name, const u32 width, const u32 height)
 {
     Texture tex = {};
     tex.path = name;
-    tex.type = TextureType::FBO_COLOR;
+    tex.type = TextureType::FBO_COLOR_8_BIT;
     tex.size.x = static_cast<i32>(width);
     tex.size.y = static_cast<i32>(height);
     
     glGenTextures(1, &tex.handle);
     glBindTexture(GL_TEXTURE_2D, tex.handle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    const u32 texIdx = static_cast<u32>(app->textures.size());
+    app->textures.push_back(tex);
+
+    return texIdx;
+}
+
+u32 TextureSupport::CreateEmptyColorTexture16BitF(App* app, const char* name, const u32 width, const u32 height)
+{
+    Texture tex = {};
+    tex.path = name;
+    tex.type = TextureType::FBO_COLOR_16_BIT_FLOAT;
+    tex.size.x = static_cast<i32>(width);
+    tex.size.y = static_cast<i32>(height);
+
+    glGenTextures(1, &tex.handle);
+    glBindTexture(GL_TEXTURE_2D, tex.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -145,24 +170,32 @@ void TextureSupport::ResizeTexture(App* app, Texture& texToResize, const u32 new
     // texToResize.handle = 0;
     //
     switch (texToResize.type) {
-    case TextureType::FBO_COLOR:
+    case TextureType::FBO_COLOR_8_BIT:
         {
+            glBindTexture(GL_TEXTURE_2D, texToResize.handle);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            // Create a new texture image 2d
+            // glGenTextures(1, &texToResize.handle);
+            // glBindTexture(GL_TEXTURE_2D, texToResize.handle);
+            // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            // glGenerateMipmap(GL_TEXTURE_2D);
+            // glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        break;
+    case TextureType::FBO_COLOR_16_BIT_FLOAT:
+    {
         glBindTexture(GL_TEXTURE_2D, texToResize.handle);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // Create a new texture image 2d
-        // glGenTextures(1, &texToResize.handle);
-        // glBindTexture(GL_TEXTURE_2D, texToResize.handle);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        // glGenerateMipmap(GL_TEXTURE_2D);
-        // glBindTexture(GL_TEXTURE_2D, 0);
-        }
+    }
         break;
     case TextureType::FBO_DEPTH:
         {

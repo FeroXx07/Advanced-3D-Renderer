@@ -39,10 +39,10 @@ void Init(App* app)
 
     // Create frame buffer and a color texture attachment
     app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
-    app->gColorTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->gPositionTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->gNormalTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gColorTextureIdx = TextureSupport::CreateEmptyColorTexture8Bit(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gPositionTextureIdx = TextureSupport::CreateEmptyColorTexture16BitF(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gNormalTextureIdx = TextureSupport::CreateEmptyColorTexture16BitF(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture8Bit(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gDepthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
@@ -100,10 +100,15 @@ void Init(App* app)
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
     
+    Attenuation attenuation = {};
+
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
+        , cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light");
+
     // Create entities
     // CreateEntity(app, glm::vec3(-2.0f, 10.0f, -15.0f), glm::vec3(-90.0f, 0.0f, 0.0f),glm::vec3(3.0f)
     //     ,sampleMeshModelIdx, unlitTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
-    CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    /*CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,cubeModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "Cube");
     CreateEntity(app, glm::vec3(-12.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
@@ -113,7 +118,7 @@ void Init(App* app)
          ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
      CreateEntity(app, glm::vec3(6.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-
+    
     CreateEntity(app, glm::vec3(-12.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     CreateEntity(app, glm::vec3(-6.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
@@ -122,7 +127,7 @@ void Init(App* app)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     CreateEntity(app, glm::vec3(6.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-
+    
     CreateEntity(app, glm::vec3(-12.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     CreateEntity(app, glm::vec3(-6.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
@@ -130,14 +135,12 @@ void Init(App* app)
     CreateEntity(app, glm::vec3(0.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     CreateEntity(app, glm::vec3(6.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");*/
 
-    Attenuation attenuation = {};
 
     // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
      //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
-       ,cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light");
+
     // CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
     //    ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
 
@@ -233,7 +236,7 @@ void EntityTransformGUI(App* app)
         EditTransform(app, glm::value_ptr(app->camera.GetViewMatrix()), glm::value_ptr(app->projectionMat), glm::value_ptr(entity.worldMatrix), true);
 
         // Light input
-        if (auto light = std::dynamic_pointer_cast<Light>(app->entities[selectedEntity]))
+        if (std::shared_ptr<Light> light = std::dynamic_pointer_cast<Light>(app->entities[selectedEntity]))
         {
             ImGui::InputFloat("Attenuation constant", &light->attenuation.constant);
             ImGui::InputFloat("Attenuation linear", &light->attenuation.linear);
@@ -638,7 +641,7 @@ void DeferredRenderGeometryPass(App* app)
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_FINAL_RESULT};
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glEnable(GL_DEPTH_TEST);
@@ -672,6 +675,11 @@ void DeferredRenderGeometryPass(App* app)
     {
         const Entity& entity = *app->entities[e];
 
+        // Skip lights' geometry in deferred rendering, draw them only in forward
+        if (std::shared_ptr<Light> light = std::dynamic_pointer_cast<Light>(app->entities[e]))
+        {
+            continue;
+        }        
         BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_LOCAL_PARAMS, entity.localParamsSize, entity.localParamsOffset);
 
         Model& model = app->models[entity.modelIndex];

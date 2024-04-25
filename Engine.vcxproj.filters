@@ -10,11 +10,11 @@
     <Filter Include="Glad">
       <UniqueIdentifier>{db9fd684-3058-4040-9399-cae66729442b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{410f82bd-d92b-48f6-8515-3eb1c1af5b9d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Stb">
       <UniqueIdentifier>{0ac2ff0f-5f18-480a-8bd6-6aa7428166bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{162697fd-f85d-45f8-aa78-5243a657bdb9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -51,6 +51,15 @@
     <ClCompile Include="ThirdParty\stb\stb.cpp">
       <Filter>Stb</Filter>
     </ClCompile>
+    <ClCompile Include="Code\assimp_model_loading.cpp" />
+    <ClCompile Include="Code\buffer_managment.cpp" />
+    <ClCompile Include="Code\program.cpp" />
+    <ClCompile Include="Code\texture.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\GraphEditor.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImCurveEdit.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImGradient.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImGuizmo.cpp" />
+    <ClCompile Include="ThirdParty\imguizmo\include\ImSequencer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -92,9 +101,66 @@
     <ClInclude Include="ThirdParty\stb\stb_image.h">
       <Filter>Stb</Filter>
     </ClInclude>
+    <ClInclude Include="Code\app.h" />
+    <ClInclude Include="Code\assimp_model_loading.h" />
+    <ClInclude Include="Code\buffer_management.h" />
+    <ClInclude Include="Code\camera.h" />
+    <ClInclude Include="Code\entity.h" />
+    <ClInclude Include="Code\errors_support.h" />
+    <ClInclude Include="Code\light.h" />
+    <ClInclude Include="Code\mesh.h" />
+    <ClInclude Include="Code\mesh_example.h" />
+    <ClInclude Include="Code\program.h" />
+    <ClInclude Include="Code\texture.h" />
+    <ClInclude Include="Code\vertex.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\GraphEditor.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImCurveEdit.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImGradient.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImGuizmo.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImSequencer.h" />
+    <ClInclude Include="ThirdParty\imguizmo\include\ImZoomSlider.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="WorkingDir\shaders.glsl">
+    <None Include="WorkingDir\Shaders\shader_deferred_geometry_pass.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_deferred_geometry_pass.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_deferred_shading_pass.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_deferred_shading_pass.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_lit_base.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_lit_base.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_lit_textured.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_lit_textured.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_unlit_base.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_unlit_base.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_unlit_screen.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_unlit_screen.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_unlit_textured.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_unlit_textured.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

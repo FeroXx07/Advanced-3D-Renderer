@@ -15,7 +15,8 @@ static const char* TextureTypeStr[] = {"NON_FBO", "COLOR", "DEPTH", "STENCIL"};
 enum class TextureType
 {
     NON_FBO,
-    FBO_COLOR,
+    FBO_COLOR_8_BIT,
+    FBO_COLOR_16_BIT_FLOAT,
     FBO_DEPTH,
     FBO_STENCIL
 };
@@ -35,7 +36,8 @@ struct TextureSupport
     static GLuint CreateTexture2DFromImage(const Image& image);
     static u32 LoadTexture2D(App* app, const char* filepath);
 
-    static u32 CreateEmptyColorTexture(App* app, const char* name, const u32 width, const u32 height);
+    static u32 CreateEmptyColorTexture8Bit(App* app, const char* name, const u32 width, const u32 height);
+    static u32 CreateEmptyColorTexture16BitF(App* app, const char* name, const u32 width, const u32 height);
     static u32 CreateEmptyDepthTexture(App* app, const char* name, const u32 width, const u32 height);
 
     static void ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight);

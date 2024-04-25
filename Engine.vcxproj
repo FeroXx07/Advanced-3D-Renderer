@@ -88,6 +88,22 @@
     <Content Include="WorkingDir\Shaders\shader_unlit_textured.frag" />
     <Content Include="WorkingDir\Shaders\shader_unlit_textured.vert" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="WorkingDir\Shaders\shader_deferred_geometry_pass.frag" />
+    <None Include="WorkingDir\Shaders\shader_deferred_geometry_pass.vert" />
+    <None Include="WorkingDir\Shaders\shader_deferred_shading_pass.frag" />
+    <None Include="WorkingDir\Shaders\shader_deferred_shading_pass.vert" />
+    <None Include="WorkingDir\Shaders\shader_lit_base.frag" />
+    <None Include="WorkingDir\Shaders\shader_lit_base.vert" />
+    <None Include="WorkingDir\Shaders\shader_lit_textured.frag" />
+    <None Include="WorkingDir\Shaders\shader_lit_textured.vert" />
+    <None Include="WorkingDir\Shaders\shader_unlit_base.frag" />
+    <None Include="WorkingDir\Shaders\shader_unlit_base.vert" />
+    <None Include="WorkingDir\Shaders\shader_unlit_screen.frag" />
+    <None Include="WorkingDir\Shaders\shader_unlit_screen.vert" />
+    <None Include="WorkingDir\Shaders\shader_unlit_textured.frag" />
+    <None Include="WorkingDir\Shaders\shader_unlit_textured.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
