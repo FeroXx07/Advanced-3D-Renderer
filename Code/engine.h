@@ -16,6 +16,8 @@ void Render(App* app);
 
 void ForwardRender(App* app);
 
+void ForwardRenderLightBoxes(App* app);
+
 void DeferredRender(App* app);
 
 void DeferredRenderGeometryPass(App* app);

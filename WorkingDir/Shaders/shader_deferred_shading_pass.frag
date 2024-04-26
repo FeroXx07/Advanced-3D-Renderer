@@ -77,13 +77,26 @@ void main()
 	
 	for (int i = 0; i < uLightCount; ++i)
 	{
-		float distance = length(uLight[i].position - fragPos);
-        if(distance > uLight[i].radius)
-        {
-			continue;
+		float attenuation = 0.0f;
+		vec3 lightDir = vec3(0.0f, 0.0f, 0.0f);
+
+		if (uLight[i].type == 1)
+		{
+			float distance = length(uLight[i].position - fragPos);
+			if(distance > uLight[i].radius)
+			{
+				continue;
+			}
+
+			attenuation = 1.0 / (1.0 + uLight[i].linear * distance + uLight[i].quadratic * distance * distance);
+
+			lightDir = normalize(uLight[i].position - fragPos);
+		}
+		else
+		{
+			lightDir = normalize(uLight[i].direction);
 		}
 		 // diffuse
-		vec3 lightDir = normalize(uLight[i].position - fragPos);  
 		float diff = max(dot(normal, lightDir), 0.0); // Clamp to 0.0
 		vec3 diffuse = diff * uLight[i].color;
 		
@@ -93,10 +106,12 @@ void main()
 		float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
 		vec3 specular = spec * specularStrength * uLight[i].color;
 		
-		// attenuation
-		float attenuation = 1.0 / (1.0 + uLight[i].linear * distance + uLight[i].quadratic * distance * distance);
-		diffuse *= attenuation;
-		specular *= attenuation;
+		if (uLight[i].type == 1)
+		{
+			// attenuation
+			diffuse *= attenuation;
+			specular *= attenuation;
+		}
 		result += (diffuse + specular/*+ specular*/);
 	}
 	
