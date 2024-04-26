@@ -100,15 +100,20 @@ void Init(App* app)
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
     
-    Attenuation attenuation = {};
+    Attenuation attenuation = {0.1f, 0.2f, 0.2f};
 
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
         , cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light");
 
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(-10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
+        , cubeModelIdx, litTexturedProgramIdx, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f), "Point Light");
+
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
+        , cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f), "Point Light");
     // Create entities
     // CreateEntity(app, glm::vec3(-2.0f, 10.0f, -15.0f), glm::vec3(-90.0f, 0.0f, 0.0f),glm::vec3(3.0f)
     //     ,sampleMeshModelIdx, unlitTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
-    /*CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,cubeModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "Cube");
     CreateEntity(app, glm::vec3(-12.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
@@ -135,7 +140,7 @@ void Init(App* app)
     CreateEntity(app, glm::vec3(0.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     CreateEntity(app, glm::vec3(6.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");*/
+       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
 
 
     // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)

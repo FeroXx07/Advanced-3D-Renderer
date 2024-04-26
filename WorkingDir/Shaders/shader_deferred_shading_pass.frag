@@ -80,7 +80,7 @@ void main()
 		float distance = length(uLight[i].position - fragPos);
         if(distance > uLight[i].radius)
         {
-			
+			continue;
 		}
 		 // diffuse
 		vec3 lightDir = normalize(uLight[i].position - fragPos);  
@@ -95,9 +95,9 @@ void main()
 		
 		// attenuation
 		float attenuation = 1.0 / (1.0 + uLight[i].linear * distance + uLight[i].quadratic * distance * distance);
-		//diffuse *= attenuation;
-		//specular *= attenuation;
-		result += (diffuse /*+ specular*/);
+		diffuse *= attenuation;
+		specular *= attenuation;
+		result += (diffuse + specular/*+ specular*/);
 	}
 	
 	rt0 = vec4(result, 1.0);

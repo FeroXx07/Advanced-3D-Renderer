@@ -64,5 +64,5 @@ void main()
 {
     rt0 = texture(uTexture, sTextCoord);
 	rt1 = vec4(sPosition, 1.0);
-	rt2 = vec4(sNormal, 1.0);
+	rt2 = vec4(normalize(sNormal), 1.0);
 }
