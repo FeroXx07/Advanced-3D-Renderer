@@ -98,21 +98,23 @@ void Init(App* app)
     const u32 patrickModelIdx = AssimpSupport::LoadModel(app, "Patrick\\Patrick.obj");
     app->quadModel = CreateSampleMesh(app);
     const u32 cubeModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Cube.obj");
+    const u32 sphereModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Sphere.obj");
+
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
     
     Attenuation attenuation = {0.1f, 0.2f, 0.2f};
 
-    CreateLight(app, LightType::DIRECTIONAL, attenuation, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(45.0f), glm::vec3(0.2f)
-        , cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.054f), "Directional Light");
+    CreateLight(app, LightType::DIRECTIONAL, attenuation, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(45.0f), glm::vec3(1.0f)
+        , cubeModelIdx, unlitBaseProgramIdx, glm::vec4(0.054f), "Directional Light");
 
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
-        , cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light 1");
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
+        , sphereModelIdx, unlitBaseProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light 1");
 
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(-10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
-        , cubeModelIdx, litTexturedProgramIdx, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f), "Point Light 2");
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(-10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
+        , sphereModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f), "Point Light 2");
 
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f)
-        , cubeModelIdx, litTexturedProgramIdx, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f), "Point Light 3");
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
+        , sphereModelIdx, unlitBaseProgramIdx, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f), "Point Light 3");
     // Create entities
     // CreateEntity(app, glm::vec3(-2.0f, 10.0f, -15.0f), glm::vec3(-90.0f, 0.0f, 0.0f),glm::vec3(3.0f)
     //     ,sampleMeshModelIdx, unlitTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
@@ -548,7 +550,7 @@ void Render(App* app)
         break;
     case DEFERRED:
         DeferredRender(app);
-        //ForwardRenderLightBoxes(app);
+        ForwardRenderLightBoxes(app);
         break;
     }
     ResourcesGUI(app);
@@ -638,19 +640,19 @@ void ForwardRender(App* app)
 
 void ForwardRenderLightBoxes(App* app)
 {
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Render");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Forward Render Light Boxes");
 
     // Render on this framebuffer render targets
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { 0 };
+    const std::vector<u32> attachments = { RT_LOCATION_FINAL_RESULT };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glEnable(GL_DEPTH_TEST);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
@@ -696,7 +698,6 @@ void ForwardRenderLightBoxes(App* app)
             glPopDebugGroup();
         }
     }
-    glPopDebugGroup();
 
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -716,8 +717,10 @@ void ForwardRenderLightBoxes(App* app)
         const u32 subMeshMaterialIdx = model.materialIdx[i];
         const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
         BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
-        mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
+        mesh.DrawSubMesh(i, app->textures[app->gFinalResultTextureIdx], app->defaultShaderProgram_uTexture, program, false);
     }
+    glPopDebugGroup();
+
     glPopDebugGroup();
 }
 
