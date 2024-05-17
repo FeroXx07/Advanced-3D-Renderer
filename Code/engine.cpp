@@ -102,60 +102,48 @@ void Init(App* app)
 
     const u32 arrowsModelIdx = AssimpSupport::LoadModel(app, "Primitives\\Arrows.obj");
     
+    const u32 sponzaModelIdx = AssimpSupport::LoadModel(app, "Sponza\\sponza.obj");
+    
     Attenuation attenuation = {0.1f, 0.2f, 0.2f};
 
-    CreateLight(app, LightType::DIRECTIONAL, attenuation, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(45.0f), glm::vec3(1.0f)
-        , cubeModelIdx, unlitBaseProgramIdx, glm::vec4(0.054f), "Directional Light");
+    CreateLight(app, LightType::DIRECTIONAL, attenuation, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(75.0f, 0.0f, 160.0f), glm::vec3(1.0f)
+        , cubeModelIdx, unlitBaseProgramIdx, glm::vec4(0.318f), "Directional Light");
 
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
         , sphereModelIdx, unlitBaseProgramIdx, glm::vec4(0.955f, 1.0f, 0.5f, 1.0f), "Point Light 1");
 
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(-10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(-10.0f, 5.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
         , sphereModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f), "Point Light 2");
 
-    CreateLight(app, LightType::POINT, attenuation, glm::vec3(10.0f, 1.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
+    CreateLight(app, LightType::POINT, attenuation, glm::vec3(10.0f, 5.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)
         , sphereModelIdx, unlitBaseProgramIdx, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f), "Point Light 3");
     // Create entities
     // CreateEntity(app, glm::vec3(-2.0f, 10.0f, -15.0f), glm::vec3(-90.0f, 0.0f, 0.0f),glm::vec3(3.0f)
     //     ,sampleMeshModelIdx, unlitTexturedProgramIdx, glm::vec4(1.0f), "SampleModel");
+    
+    CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec4(0.025f)
+        ,sponzaModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "Sponza");
+    
     CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
         ,cubeModelIdx, litTexturedProgramIdx, glm::vec4(1.0f), "Cube");
-    CreateEntity(app, glm::vec3(-12.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,patrickModelIdx, unlitBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-     CreateEntity(app, glm::vec3(-6.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-         ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-     CreateEntity(app, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-         ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-     CreateEntity(app, glm::vec3(6.0f, 0.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    
+    CreateEntity(app, glm::vec3(0.0f, 5.0f, -4.0f), glm::vec3(0.0f),glm::vec3(0.3f)
+        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+
+    CreateEntity(app, glm::vec3(0.0f, 5.0f, 3.0f), glm::vec3(0.0f, 180.0f, 0.0f),glm::vec3(0.3f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     
-    CreateEntity(app, glm::vec3(-12.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(-6.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(6.0f, 0.0f, 4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    
-    CreateEntity(app, glm::vec3(-12.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(-6.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(0.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-        ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
-    CreateEntity(app, glm::vec3(6.0f, 0.0f, -4.0f), glm::vec3(0.0f),glm::vec3(1.0f)
-       ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    //  CreateEntity(app, glm::vec3(-6.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    //      ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    //  CreateEntity(app, glm::vec3(0.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    //      ,patrickModelIdx, unlitTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+    //  CreateEntity(app, glm::vec3(6.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
+    //     ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
 
-
-    // CreateLight(app, LightType::DIRECTIONAL, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 45.0f, 0.0f),glm::vec3(0.2f)
-     //     ,arrowsModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f), "Directional Light");
-
-    // CreateLight(app, LightType::POINT, glm::vec3(-2.0f, 2.0f, 0.0f), glm::vec3(0.0f),glm::vec3(0.2f)
-    //    ,cubeModelIdx, unlitBaseProgramIdx, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), "Point Light");
 
     // Set camera intial pos
-    app->camera.position = glm::vec3(-3.0f, 1.0f, 25.0f);
+    app->camera.position = glm::vec3(28.0f, 8.453f, 0.052f);
+    app->camera.angles = glm::vec3(-183.0f, -8.1, 0.0f);
 
     OnScreenResize(app);
 }
@@ -248,9 +236,9 @@ void EntityTransformGUI(App* app)
         // Light input
         if (std::shared_ptr<Light> light = std::dynamic_pointer_cast<Light>(app->entities[selectedEntity]))
         {
-            ImGui::InputFloat("Attenuation constant", &light->attenuation.constant);
-            ImGui::InputFloat("Attenuation linear", &light->attenuation.linear);
-            ImGui::InputFloat("Attenuation quadratic", &light->attenuation.quadratic);
+            ImGui::SliderFloat("Attenuation constant", &light->attenuation.constant, 0.0f, 10.0f);
+            ImGui::SliderFloat("Attenuation linear", &light->attenuation.linear, 0.0f, 10.0f);
+            ImGui::SliderFloat("Attenuation quadratic", &light->attenuation.quadratic, 0.0f, 10.0f);
         }
     }
 }
