@@ -628,6 +628,9 @@ void ForwardRender(App* app)
 
 void ForwardRenderLightBoxes(App* app)
 {
+    if (app->gBufferMode !=  GBufferMode::FINAL)
+        return;
+    
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Forward Render Light Boxes");
 
     // Render on this framebuffer render targets
