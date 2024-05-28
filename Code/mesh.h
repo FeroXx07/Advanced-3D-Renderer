@@ -28,7 +28,7 @@ struct Material
     u32 specularTextureIdx;
     u32 normalsTextureIdx;
     u32 bumpTextureIdx;
-
+    
     u32 paramsOffset;
     u32 paramsSize;
 };
@@ -108,7 +108,7 @@ inline void Mesh::DrawSubMesh(u32 subMeshIndex, const std::vector<u32>& textureU
     
     for (u32 i = 0; i < textureUniformsLocations.size(); ++i)
     {
-        glActiveTexture(GL_TEXTURE0 + i);
+        glActiveTexture(GL_TEXTURE0 + textureUniformsLocations[i]);
         glBindTexture(GL_TEXTURE_2D, textureUniformsHandles[i]);
         //glUniform1i(static_cast<GLint>(textureUniformsLocations[i]), static_cast<GLint>(i)); // stackoverflow.com/questions/23687102/gluniform1f-vs-gluniform1i-confusion
     }

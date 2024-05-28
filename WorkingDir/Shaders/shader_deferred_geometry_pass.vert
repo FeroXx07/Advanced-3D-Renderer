@@ -1,10 +1,10 @@
 #version 430
 
 layout(location = 0) in vec3 aPosition; // www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)
-layout(location = 1) in vec3 aNormal; // In localspace
+layout(location = 1) in vec3 aNormal; // In local tangent space
 layout(location = 2) in vec2 aTextCoord;
-//layout(location = 3) in vec3 aTangent;
-//layout(location = 4) in vec3 aBitangent;
+layout(location = 3) in vec3 aTangent; // In local tangent space
+layout(location = 4) in vec3 aBitangent; // In local tangent space
 
 struct Light					
 {
@@ -52,8 +52,10 @@ layout(binding = 2, std140) uniform MaterialParams
 
 // Can use the same locations for out and in because the belong the different stages in the pipeline.
 layout(location = 0) out vec3 vPosition;
-layout(location = 1) out vec3 vNormal; // In worldspace
+layout(location = 1) out vec3 vNormal; // In world tangent space
 layout(location = 2) out vec2 vTextCoord; // In worldspace
+layout(location = 3) out vec3 vTangent; // In world tangent space
+layout(location = 4) out vec3 vBitangent; // In world tangent space
 layout(location = 5) out vec3 vViewDir; // In worldspace
 
 void main() {

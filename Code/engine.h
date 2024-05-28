@@ -24,7 +24,7 @@ void DeferredRenderGeometryPass(App* app);
 
 void DeferredRenderShadingPass(App* app);
 
-void DeferredRenderDisplay(App* app);
+void DeferredRenderDisplayPass(App* app);
 
 void CheckShadersHotReload(App* app);
 

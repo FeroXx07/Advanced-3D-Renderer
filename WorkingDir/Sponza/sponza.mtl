@@ -1,4 +1,4 @@
-newmtl sponza1:Material__25
+newmtl sponza:Material__25
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -9,7 +9,7 @@ bump  -bm 0 lion_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:Material__47
+newmtl sponza:Material__47
 illum 4
 Kd 0.59 0.59 0.59
 Ka 0.59 0.59 0.59
@@ -17,7 +17,7 @@ Tf 1.00 1.00 1.00
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:Material__298
+newmtl sponza:Material__298
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -28,7 +28,7 @@ bump  -bm 0 background_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:VasePlant
+newmtl sponza:VasePlant
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -38,39 +38,45 @@ map_Ka vase_plant.png
 bump  -bm 0 vase_plant_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks vase_plant_spec.png
 Ns 10.00
-newmtl sponza1:arch
+newmtl sponza:arch
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_arch_diff.png
 map_Ka sponza_arch_diff.png
+bump  -bm 1 sponza_arch_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_arch_spec.png
 Ns 10.00
-newmtl sponza1:bricks
+newmtl sponza:bricks
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd spnza_bricks_a_diff.png
 map_Ka spnza_bricks_a_diff.png
-bump  -bm 0 spnza_bricks_a_diff.png
+bump  -bm 1 spnza_bricks_a_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks spnza_bricks_a_spec.png
 Ns 10.00
-newmtl sponza1:ceiling
+newmtl sponza:ceiling
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_ceiling_a_diff.png
 map_Ka sponza_ceiling_a_diff.png
+bump  -bm 1 sponza_ceiling_a_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_ceiling_a_spec.png
 Ns 10.00
-newmtl sponza1:chain
+newmtl sponza:chain
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -81,7 +87,7 @@ bump  -bm 0 chain_texture_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:column_a
+newmtl sponza:column_a
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -91,8 +97,9 @@ map_Ka sponza_column_a_diff.png
 bump  -bm 0 sponza_column_a_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_column_a_spec.png
 Ns 10.00
-newmtl sponza1:column_b
+newmtl sponza:column_b
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -102,8 +109,9 @@ map_Ka sponza_column_b_diff.png
 bump  -bm 0 sponza_column_b_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_column_b_spec.png
 Ns 10.00
-newmtl sponza1:column_c
+newmtl sponza:column_c
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -113,98 +121,114 @@ map_Ka sponza_column_c_diff.png
 bump  -bm 0 sponza_column_c_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_column_c_spec.png
 Ns 10.00
-newmtl sponza1:details
+newmtl sponza:details
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_details_diff.png
 map_Ka sponza_details_diff.png
+bump  -bm 1 sponza_details_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_details_spec.png
 Ns 10.00
-newmtl sponza1:fabric_a
+newmtl sponza:fabric_a
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_fabric_diff.png
 map_Ka sponza_fabric_diff.png
+bump  -bm 1 sponza_fabric_blue_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_fabric_spec.png
 Ns 10.00
-newmtl sponza1:fabric_c
+newmtl sponza:fabric_c
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_curtain_diff.png
 map_Ka sponza_curtain_diff.png
+bump  -bm 1 sponza_curtain_blue_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:fabric_d
+newmtl sponza:fabric_d
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_fabric_blue_diff.png
 map_Ka sponza_fabric_blue_diff.png
+bump  -bm 1 sponza_fabric_blue_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_fabric_spec.png
 Ns 10.00
-newmtl sponza1:fabric_e
+newmtl sponza:fabric_e
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_fabric_green_diff.png
 map_Ka sponza_fabric_green_diff.png
+bump  -bm 1 sponza_fabric_blue_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_fabric_spec.png
 Ns 10.00
-newmtl sponza1:fabric_f
+newmtl sponza:fabric_f
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_curtain_green_diff.png
 map_Ka sponza_curtain_green_diff.png
+bump  -bm 1 sponza_curtain_blue_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:fabric_g
+newmtl sponza:fabric_g
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_curtain_blue_diff.png
 map_Ka sponza_curtain_blue_diff.png
+bump  -bm 1 sponza_curtain_blue_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:flagpole
+newmtl sponza:flagpole
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_flagpole_diff.png
 map_Ka sponza_flagpole_diff.png
+bump  -bm 1 sponza_flagpole_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_flagpole_spec.png
 Ns 10.00
-newmtl sponza1:floor
+newmtl sponza:floor
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_floor_a_diff.png
 map_Ka sponza_floor_a_diff.png
+bump  -bm 1 sponza_floor_a_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_floor_a_spec.png
 Ns 10.00
-newmtl sponza1:leaf
+newmtl sponza:leaf
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -214,38 +238,42 @@ map_Ka sponza_thorn_diff.png
 bump  -bm 0 sponza_thorn_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks sponza_thorn_spec.png
 Ns 10.00
-newmtl sponza1:roof
+newmtl sponza:roof
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd sponza_roof_diff.png
 map_Ka sponza_roof_diff.png
+bump  -bm 1 sponza_roof_diff_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:vase
+newmtl sponza:vase
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd vase_dif.png
 map_Ka vase_dif.png
+bump  -bm 1 vase_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:vase_hanging
+newmtl sponza:vase_hanging
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd vase_hanging.png
 map_Ka vase_hanging.png
+bump  -bm 1 vase_hanging_NRM.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
-newmtl sponza1:vase_round
+newmtl sponza:vase_round
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
@@ -255,4 +283,5 @@ map_Ka vase_round.png
 bump  -bm 0 vase_round_ddn.png
 Ni 1.50
 Ks 0.00 0.00 0.00
+map_Ks vase_round_spec.png
 Ns 10.00

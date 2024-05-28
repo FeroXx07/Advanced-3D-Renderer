@@ -128,7 +128,7 @@ void AssimpSupport::ProcessAssimpMaterial(App* app, const aiMaterial* material, 
     material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor);
     material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
     material->Get(AI_MATKEY_SHININESS, shininess);
-
+    
     myMaterial.name = name.C_Str();
     myMaterial.albedo = vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b);
     myMaterial.emissive = vec3(emissiveColor.r, emissiveColor.g, emissiveColor.b);
@@ -170,7 +170,6 @@ void AssimpSupport::ProcessAssimpMaterial(App* app, const aiMaterial* material, 
         const String filepath = MakePath(directory, filename);
         myMaterial.bumpTextureIdx = TextureSupport::LoadTexture2D(app, filepath.str);
     }
-
     //myMaterial.createNormalFromBump();
 }
 
@@ -235,20 +234,20 @@ void AssimpSupport::ProcessAssimpMesh(const aiScene* scene, aiMesh* mesh, Mesh* 
 
     // create the vertex format
     VertexBufferLayout vertexBufferLayout = {};
-    vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 0, 3, 0 } );
-    vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 1, 3, 3*sizeof(float) } );
+    vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ static_cast<int>(VERTEX_ATTRIBUTE_LOCATION::ATTR_LOCATION_POSITION), 3, 0 } );
+    vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ static_cast<int>(VERTEX_ATTRIBUTE_LOCATION::ATTR_LOCATION_NORMAL), 3, 3*sizeof(float) } );
     vertexBufferLayout.stride = 6 * sizeof(float);
     if (hasTexCoords)
     {
-        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 2, 2, vertexBufferLayout.stride } );
+        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ static_cast<int>(VERTEX_ATTRIBUTE_LOCATION::ATTR_LOCATION_TEXTCOORD), 2, vertexBufferLayout.stride } );
         vertexBufferLayout.stride += 2 * sizeof(float);
     }
     if (hasTangentSpace)
     {
-        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 3, 3, vertexBufferLayout.stride } );
+        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ static_cast<int>(VERTEX_ATTRIBUTE_LOCATION::ATTR_LOCATION_TANGENT), 3, vertexBufferLayout.stride } );
         vertexBufferLayout.stride += 3 * sizeof(float);
 
-        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ 4, 3, vertexBufferLayout.stride } );
+        vertexBufferLayout.attributes.push_back( VertexBufferAttribute{ static_cast<int>(VERTEX_ATTRIBUTE_LOCATION::ATTR_LOCATION_BITANGENT), 3, vertexBufferLayout.stride } );
         vertexBufferLayout.stride += 3 * sizeof(float);
     }
 

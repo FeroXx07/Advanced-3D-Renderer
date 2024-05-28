@@ -597,7 +597,12 @@ void ForwardRender(App* app)
             const u32 subMeshMaterialIdx = model.materialIdx[i];
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
             BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
-            mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
+
+            const std::vector<u32> texturesUniformLocations = { MAT_T_DIFFUSE, MAT_T_BUMP, MAT_T_SPECULAR };
+            const std::vector<u32> texturesUniformHandles = { app->textures[subMeshMaterial.albedoTextureIdx].handle, app->textures[subMeshMaterial.bumpTextureIdx].handle,
+                app->textures[subMeshMaterial.specularTextureIdx].handle};
+            
+            mesh.DrawSubMesh(i, texturesUniformHandles, texturesUniformLocations, program, false);
         }
         glPopDebugGroup();
     }
@@ -718,7 +723,7 @@ void ForwardRenderLightBoxes(App* app)
 void DeferredRender(App* app) {
     DeferredRenderGeometryPass(app);
     DeferredRenderShadingPass(app);
-    DeferredRenderDisplay(app);
+    DeferredRenderDisplayPass(app);
 }
 
 void DeferredRenderGeometryPass(App* app)
@@ -848,7 +853,7 @@ void DeferredRenderShadingPass(App* app)
     glPopDebugGroup();
 }
 
-void DeferredRenderDisplay(App* app)
+void DeferredRenderDisplayPass(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Display");
 

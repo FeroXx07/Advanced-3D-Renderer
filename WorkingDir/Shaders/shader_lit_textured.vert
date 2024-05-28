@@ -1,10 +1,10 @@
 #version 430
 
 layout(location = 0) in vec3 aPosition; // www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)
-layout(location = 1) in vec3 aNormal; 
+layout(location = 1) in vec3 aNormal;  // In local tangent space
 layout(location = 2) in vec2 aTextCoord;
-//layout(location = 3) in vec3 aTangent;
-//layout(location = 4) in vec3 aBitangent;
+layout(location = 3) in vec3 aTangent; // In local tangent space
+layout(location = 4) in vec3 aBitangent; // In local tangent space
 
 struct Light					
 {
@@ -52,16 +52,25 @@ layout(binding = 2, std140) uniform MaterialParams
 
 // Can use the same locations for out and in because the belong the different stages in the pipeline.
 layout(location = 0) out vec3 vPosition;
-layout(location = 1) out vec3 vNormal; // In worldspace
-layout(location = 2) out vec2 vTextCoord; // In worldspace
-layout(location = 5) out vec3 vViewDir; // In worldspace
+layout(location = 1) out vec3 vNormal; // In world tangent space
+layout(location = 2) out vec2 vTextCoord; // In world space
+layout(location = 3) out vec3 vViewDir; // In world space
+layout(location = 4) out mat3 vTBN; 
 
 void main() {
     vTextCoord = aTextCoord;
 	vPosition = vec3(uWorldMatrix * vec4(aPosition, 1.0));
+	
 	// Homogenous coordinate 0.0 because we don't want to translate the normal vector.
 	//vNormal = normalize(vec3(uNormalMatrix * aNormal));  // For scaling modify normals but remove translation.
-	vNormal = normalize(vec3(uWorldMatrix * vec4(aNormal, 0.0)));
+	
+	vec3 T = normalize(vec3(uWorldMatrix * vec4(aTangent,   0.0)));
+    vec3 B = normalize(vec3(uWorldMatrix * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(uWorldMatrix * vec4(aNormal,    0.0)));
+    vTBN = mat3(T, B, N);
+	
+	vNormal = N;
+	
 	vViewDir = uCameraPosition - vPosition;
 	gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);
 }
