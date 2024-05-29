@@ -20,13 +20,14 @@ enum RenderingMode
     DEFERRED
 };
 
-static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "DEPTH", "FINAL"};
+static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "SPECULAR", "DEPTH", "FINAL"};
 
 enum GBufferMode
 {
     COLOR,
     NORMAL,
     POSITION,
+    SPECULAR,
     DEPTH,
     FINAL
 };
@@ -62,11 +63,14 @@ struct App
     // Screen quad
     u32 quadModel;
     u32 screenDisplayProgramIdx;
+
+    // G Buffer
     Buffer frameBufferObject;
     u32 gColorTextureIdx;
     u32 gDepthTextureIdx;
     u32 gNormalTextureIdx;
     u32 gPositionTextureIdx;
+    u32 gSpecularTextureIdx;
     u32 gFinalResultTextureIdx;
     
     bool drawWireFrame = false;

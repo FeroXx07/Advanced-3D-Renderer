@@ -3,13 +3,12 @@
 layout(location = 0) in vec3 sPosition; // In worldspace
 layout(location = 1) in vec3 sNormal; // In worldspace
 layout(location = 2) in vec2 sTextCoord; 
-//layout(location = 3) in vec3 sTangent;
-//layout(location = 4) in vec3 sBitangent;
-layout(location = 5) in vec3 sViewDir; // In worldspace
+layout(location = 3) in vec3 sViewDir; // In worldspace
 
-layout (binding = 0) uniform sampler2D uTextureColor; // www.khronos.org/opengl/wiki/Uniform_(GLSL)
-layout (binding = 1) uniform sampler2D uTexturePosition; 
-layout (binding = 2) uniform sampler2D uTextureNormals; 
+layout (binding = 0) uniform sampler2D uRTColor; 
+layout (binding = 1) uniform sampler2D uRTPosition; 
+layout (binding = 2) uniform sampler2D uRTNormals; 
+layout (binding = 3) uniform sampler2D uRTSpecularRoughness; 
 
 struct Light					
 {
@@ -65,11 +64,11 @@ layout(location = 0) out vec4 rt0; // Color -> drawBuffers[0] = GL_COLOR_ATTACHM
 
 void main()
 {
-    vec3 fragPos = texture(uTexturePosition, sTextCoord).rgb;
-    vec3 normal = texture(uTextureNormals, sTextCoord).rgb;
-    vec3 albedo = texture(uTextureColor, sTextCoord).rgb;
+    vec3 fragPos = texture(uRTPosition, sTextCoord).rgb;
+    vec3 normal = texture(uRTNormals, sTextCoord).rgb;
+    vec3 albedo = texture(uRTColor, sTextCoord).rgb;
+	float specularStrength = texture(uRTSpecularRoughness, sTextCoord).r;
 	
-    float specularStrength = 0.8;
     float ambientStrength = 0.1;
     
     vec3 result = albedo * ambientStrength; 

@@ -54,14 +54,20 @@ layout(binding = 2, std140) uniform MaterialParams
 layout(location = 0) out vec3 vPosition;
 layout(location = 1) out vec3 vNormal; // In world tangent space
 layout(location = 2) out vec2 vTextCoord; // In worldspace
-layout(location = 3) out vec3 vTangent; // In world tangent space
-layout(location = 4) out vec3 vBitangent; // In world tangent space
-layout(location = 5) out vec3 vViewDir; // In worldspace
+layout(location = 3) out vec3 vViewDir; // In worldspace
+layout(location = 4) out mat3 vTBN; 
 
 void main() {
     vTextCoord = aTextCoord;
 	vPosition = vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	vNormal = normalize(vec3(uWorldMatrix * vec4(aNormal, 0.0)));
+	
+	vec3 T = normalize(vec3(uWorldMatrix * vec4(aTangent,   0.0)));
+    vec3 B = normalize(vec3(uWorldMatrix * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(uWorldMatrix * vec4(aNormal,    0.0)));
+    vTBN = mat3(T, B, N);
+	
+	vNormal = N;
+	
 	vViewDir = uCameraPosition - vPosition;
 	gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);
 	float a = material.albedo.x;

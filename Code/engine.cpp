@@ -39,20 +39,22 @@ void Init(App* app)
 
     // Create frame buffer and a color texture attachment
     app->frameBufferObject = FrameBufferManagement::CreateFrameBuffer();
-    app->gColorTextureIdx = TextureSupport::CreateEmptyColorTexture8Bit(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->gPositionTextureIdx = TextureSupport::CreateEmptyColorTexture16BitF(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->gNormalTextureIdx = TextureSupport::CreateEmptyColorTexture16BitF(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
-    app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture8Bit(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gColorTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gPositionTextureIdx = TextureSupport::CreateEmptyColorTexture_16Bit_F_RGBA(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gNormalTextureIdx = TextureSupport::CreateEmptyColorTexture_16Bit_F_RGBA(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gSpecularTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_R(app, "FBO Specular", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gDepthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gColorTextureIdx].handle, RT_LOCATION_COLOR);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gPositionTextureIdx].handle, RT_LOCATION_POSITION);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gNormalTextureIdx].handle, RT_LOCATION_NORMAL);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gSpecularTextureIdx].handle, RT_LOCATION_SPECULAR_ROUGHNESS);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gFinalResultTextureIdx].handle, RT_LOCATION_FINAL_RESULT);
     FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->gDepthTextureIdx].handle);
     FrameBufferManagement::CheckStatus();
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_FINAL_RESULT};
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_FINAL_RESULT};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     
@@ -734,7 +736,7 @@ void DeferredRenderGeometryPass(App* app)
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL};
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glEnable(GL_DEPTH_TEST);
@@ -785,8 +787,13 @@ void DeferredRenderGeometryPass(App* app)
         {
             const u32 subMeshMaterialIdx = model.materialIdx[i];
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
+
+            const std::vector<u32> texturesUniformLocations = { MAT_T_DIFFUSE, MAT_T_BUMP, MAT_T_SPECULAR };
+            const std::vector<u32> texturesUniformHandles = { app->textures[subMeshMaterial.albedoTextureIdx].handle, app->textures[subMeshMaterial.bumpTextureIdx].handle,
+                app->textures[subMeshMaterial.specularTextureIdx].handle};
+            
             BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
-            mesh.DrawSubMesh(i, app->textures[subMeshMaterial.albedoTextureIdx], app->defaultShaderProgram_uTexture, program, false);
+            mesh.DrawSubMesh(i, texturesUniformHandles, texturesUniformLocations, program, false);
         }
 
         glPopDebugGroup();
@@ -832,9 +839,9 @@ void DeferredRenderShadingPass(App* app)
     const Program& program = app->programs[app->deferredShadingProgramIdx];
     glUseProgram(program.handle);
 
-    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL };
+    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS};
     const std::vector<u32> texturesUniformHandles = { app->textures[app->gColorTextureIdx].handle, app->textures[app->gPositionTextureIdx].handle,
-        app->textures[app->gNormalTextureIdx].handle};
+        app->textures[app->gNormalTextureIdx].handle, app->textures[app->gSpecularTextureIdx].handle};
     
     Model& model = app->models[app->quadModel];
     Mesh& mesh = app->meshes[model.meshIdx];
@@ -884,6 +891,9 @@ void DeferredRenderDisplayPass(App* app)
             break;
         case GBufferMode::POSITION:
             gBufferModeIdx = app->gPositionTextureIdx;
+            break;
+        case GBufferMode::SPECULAR:
+            gBufferModeIdx = app->gSpecularTextureIdx;
             break;
         case GBufferMode::DEPTH:
             gBufferModeIdx = app->gDepthTextureIdx;
