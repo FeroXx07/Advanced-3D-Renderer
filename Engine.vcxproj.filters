@@ -163,5 +163,11 @@
     <None Include="WorkingDir\Shaders\shader_unlit_textured.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="WorkingDir\Shaders\shader_water.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_water.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

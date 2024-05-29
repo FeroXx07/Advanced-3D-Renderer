@@ -45,6 +45,10 @@ void Init(App* app)
     app->gSpecularTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_R(app, "FBO Specular", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gDepthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gReflectionTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Reflection", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gRefractionTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Refraction", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gReflectionDepthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Reflection Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gRefractionDepthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Refraction Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gColorTextureIdx].handle, RT_LOCATION_COLOR);
@@ -67,6 +71,8 @@ void Init(App* app)
 
     const u32 unlitBaseProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_base.vert", "Shaders\\shader_unlit_base.frag", "UNLIT_BASE");
     const u32 unlitTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_textured.vert", "Shaders\\shader_unlit_textured.frag", "UNLIT_TEXTURED");
+
+    const u32 waterTexturedProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_water.vert", "Shaders\\shader_water.frag", "WATER");
 
     app->deferredGeometryProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_geometry_pass.vert", "Shaders\\shader_deferred_geometry_pass.frag", "DEFERRED_GEOMETRY_PASS");
     app->deferredShadingProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_shading_pass.vert", "Shaders\\shader_deferred_shading_pass.frag", "DEFERRED_SHADING_PASS");
@@ -134,6 +140,9 @@ void Init(App* app)
 
     CreateEntity(app, glm::vec3(0.0f, 5.0f, 3.0f), glm::vec3(0.0f, 180.0f, 0.0f),glm::vec3(0.3f)
         ,patrickModelIdx, litTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
+
+    CreateEntity(app, glm::vec3(0.0f, 10.0f, 3.0f), glm::vec3(0.0f, 180.0f, 0.0f), glm::vec3(0.3f)
+        , patrickModelIdx, waterTexturedProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");
     
     //  CreateEntity(app, glm::vec3(-6.0f, 4.0f, 0.0f), glm::vec3(0.0f),glm::vec3(1.0f)
     //      ,patrickModelIdx, litBaseProgramIdx, glm::vec4(0.788f, 0.522f, 0.02f, 1.0f), "PatrickModel");

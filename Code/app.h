@@ -20,7 +20,8 @@ enum RenderingMode
     DEFERRED
 };
 
-static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "SPECULAR", "DEPTH", "FINAL"};
+static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "SPECULAR", "DEPTH", "FINAL", "REFLECTION",
+"REFLECTION_DEPTH", "REFRACTION", "REFRACTION_DEPTH"};
 
 enum GBufferMode
 {
@@ -29,7 +30,11 @@ enum GBufferMode
     POSITION,
     SPECULAR,
     DEPTH,
-    FINAL
+    FINAL,
+    REFLECTION,
+    REFLECTION_DEPTH,
+    REFRACTION,
+    REFRACTION_DEPTH
 };
 
 struct ImGuizmoData 
@@ -71,6 +76,10 @@ struct App
     u32 gNormalTextureIdx;
     u32 gPositionTextureIdx;
     u32 gSpecularTextureIdx;
+    u32 gReflectionTextureIdx;
+    u32 gReflectionDepthTextureIdx;
+    u32 gRefractionTextureIdx;
+    u32 gRefractionDepthTextureIdx;
     u32 gFinalResultTextureIdx;
     
     bool drawWireFrame = false;
