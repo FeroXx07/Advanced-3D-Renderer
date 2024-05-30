@@ -989,7 +989,11 @@ void DeferredRenderSSAOPass(App* app)
     const std::vector<u32> texturesUniformLocations = { RT_LOCATION_POSITION, RT_LOCATION_NORMAL, 3 /*Noise texture*/};
     const std::vector<u32> texturesUniformHandles = { app->textures[app->gPositionTextureIdx].handle, app->textures[app->gNormalTextureIdx].handle,
         app->textures[app->ssaoNoiseTextureIdx].handle};
-    
+
+    // Bind the global params so shader can read kernel sample data
+    BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_GLOBAL_PARAMS, app->globalParamsSize, app->globalParamsOffset);
+    BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_SSAO_PARAMS, app->ssaoData.paramsSize, app->ssaoData.paramsOffset);
+
     // Draw the framebuffer onto a quad that covers the whole screen.
     const Program& screenProgram = app->programs[app->deferredSSAOProgramIdx];
     glUseProgram(screenProgram.handle);
@@ -998,9 +1002,7 @@ void DeferredRenderSSAOPass(App* app)
 
     // Screen filling quad rendering needed to do SSAO
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, model.name.c_str());
-    // Bind the global params so shader can read kernel sample data
-    BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_GLOBAL_PARAMS, app->globalParamsSize, app->globalParamsOffset);
-    //BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_SSAO_PARAMS, app->ssaoData.paramsSize, app->ssaoData.paramsOffset);
+    
     const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
     for (u32 i = 0; i < subMeshCount; i++)
     {
@@ -1193,6 +1195,10 @@ void PushSSAODataUBO(App* app)
         BufferManagement::AlignHead(uniformBuffer, 4 * BASIC_MACHINE_UNIT);
         PUSH_VEC3(uniformBuffer, app->ssaoData.kernel[i]);
     }
+
+    // Padding at the end of the array (rule (4) of the std140)
+    BufferManagement::AlignHead(uniformBuffer, 4 * BASIC_MACHINE_UNIT);
+
     PUSH_U_INT(uniformBuffer, app->ssaoData.kernelSize);
     PUSH_FLOAT(uniformBuffer, app->ssaoData.radius);
     PUSH_FLOAT(uniformBuffer, app->ssaoData.bias);
