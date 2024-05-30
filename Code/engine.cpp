@@ -56,9 +56,16 @@ void Init(App* app)
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gNormalTextureIdx].handle, RT_LOCATION_NORMAL);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gSpecularTextureIdx].handle, RT_LOCATION_SPECULAR_ROUGHNESS);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gFinalResultTextureIdx].handle, RT_LOCATION_FINAL_RESULT);
+
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gReflectionTextureIdx].handle, RT_LOCATION_REFLECTION);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gRefractionTextureIdx].handle, RT_LOCATION_REFRACTION);
     FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->gDepthTextureIdx].handle);
+
+    FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->gReflectionDepthTextureIdx].handle);
+    FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->gRefractionDepthTextureIdx].handle);
+
     FrameBufferManagement::CheckStatus();
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_FINAL_RESULT};
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_FINAL_RESULT, RT_LOCATION_REFLECTION, RT_LOCATION_REFRACTION };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
     
@@ -736,7 +743,6 @@ void DeferredRender(App* app) {
     DeferredRenderShadingPass(app);
     DeferredRenderDisplayPass(app);
 }
-
 void DeferredRenderGeometryPass(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Geometry");
@@ -745,7 +751,7 @@ void DeferredRenderGeometryPass(App* app)
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS};
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS,RT_LOCATION_REFLECTION,RT_LOCATION_REFRACTION};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glEnable(GL_DEPTH_TEST);
@@ -909,6 +915,18 @@ void DeferredRenderDisplayPass(App* app)
             break;
         case GBufferMode::FINAL:
             gBufferModeIdx = app->gFinalResultTextureIdx; // Same as app->colorTextureIdx
+            break;
+        case GBufferMode::REFLECTION:
+            gBufferModeIdx = app->gReflectionTextureIdx; 
+            break;
+        case GBufferMode::REFLECTION_DEPTH:
+            gBufferModeIdx = app->gReflectionDepthTextureIdx; 
+            break;
+        case GBufferMode::REFRACTION:
+            gBufferModeIdx = app->gRefractionTextureIdx; 
+            break;
+        case GBufferMode::REFRACTION_DEPTH:
+            gBufferModeIdx = app->gRefractionDepthTextureIdx; 
             break;
         default:
             break;
