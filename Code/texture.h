@@ -1,5 +1,7 @@
 ﻿#ifndef TEXTURE_H
 #define TEXTURE_H
+#include <vector>
+
 #include "platform.h"
 
 struct App;
@@ -41,6 +43,7 @@ struct TextureSupport
     static u32 CreateEmptyColorTexture_16Bit_F_RGBA(App* app, const char* name, const u32 width, const u32 height);
     static u32 CreateEmptyDepthTexture(App* app, const char* name, const u32 width, const u32 height);
     static u32 CreateEmptyColorTexture_8Bit_R(App* app, const char* name, const u32 width, const u32 height);
+    static u32 CreateNoiseColorTexture_16Bit_F_RGBA(App* app, const char* name, const u32 width, const u32 height, const std::vector<glm::vec3>& ssaoNoise);
 
     static void ResizeTexture(App* app, Texture& texToResize, const u32 newWidth, const u32 newHeight);
 

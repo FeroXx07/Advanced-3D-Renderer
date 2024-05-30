@@ -10,6 +10,7 @@
 #include "engine.h"
 #include <imgui.h>
 #include <iostream>
+#include <random>
 
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -23,6 +24,10 @@
 
 #include "ImGuizmo.h"
 
+float lerp(float a, float b, float f)
+{
+    return a + f * (b - a);
+} 
 
 void Init(App* app)
 {
@@ -46,6 +51,7 @@ void Init(App* app)
     app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gDepthTextureIdx = TextureSupport::CreateEmptyDepthTexture(app, "FBO Depth", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
+    // Bind textures to framebuffer, with the corresponding location.
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gColorTextureIdx].handle, RT_LOCATION_COLOR);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gPositionTextureIdx].handle, RT_LOCATION_POSITION);
@@ -57,6 +63,48 @@ void Init(App* app)
     const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_FINAL_RESULT};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
+
+    // SSAO Samples
+    std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
+    std::default_random_engine generator;
+    for (unsigned int i = 0; i < app->ssaoData.maxSamples; ++i)
+    {
+        glm::vec3 sample(
+            randomFloats(generator) * 2.0 - 1.0, 
+            randomFloats(generator) * 2.0 - 1.0, 
+            randomFloats(generator)
+        );
+        sample  = glm::normalize(sample);
+        sample *= randomFloats(generator);
+        
+        float scale = (float)i / 64.0; 
+        scale = lerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+        app->ssaoData.kernel.push_back(sample);
+    }
+
+    // SSAO Noise for random rotation vectors to avoid artifactes (bad visual results) like banding
+    for (unsigned int i = 0; i < 16; i++)
+    {
+        glm::vec3 noise(
+            randomFloats(generator) * 2.0 - 1.0, 
+            randomFloats(generator) * 2.0 - 1.0, 
+            0.0f); 
+        app->ssaoData.noise.push_back(noise);
+    }
+
+    // SSAO frame buffer object
+    app->ssaoFrameBufferObject = FrameBufferManagement::CreateFrameBuffer();
+    app->ssaoNoiseTextureIdx = TextureSupport::CreateNoiseColorTexture_16Bit_F_RGBA(app, "SSAO Noise", 4, 4, app->ssaoData.noise);
+    app->gSSAOTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_R(app, "SSAO FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+
+    // Set the corresponding texture bindings to the ssao fbo
+    FrameBufferManagement::BindFrameBuffer(app->ssaoFrameBufferObject);
+    FrameBufferManagement::SetColorAttachment(app->ssaoFrameBufferObject, app->textures[app->gSSAOTextureIdx].handle, RT_LOCATION_COLOR);
+    FrameBufferManagement::CheckStatus();
+    const std::vector<u32> ssaoAttachments = { RT_LOCATION_COLOR};
+    FrameBufferManagement::SetDrawBuffersTextures(ssaoAttachments);
+    FrameBufferManagement::UnBindFrameBuffer(app->ssaoFrameBufferObject);
     
     // Camera & View init
     app->projectionMat = glm::perspective(glm::radians(app->camera.zoom), (float)app->displaySizeCurrent.x / (float)app->displaySizeCurrent.y, 0.1f, 100.0f);
@@ -72,7 +120,8 @@ void Init(App* app)
     app->deferredShadingProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_shading_pass.vert", "Shaders\\shader_deferred_shading_pass.frag", "DEFERRED_SHADING_PASS");
 
     app->screenDisplayProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_unlit_screen.vert", "Shaders\\shader_unlit_screen.frag", "UNLIT_SCREEN");
-    
+
+    app->deferredSSAOProgramIdx = ShaderSupport::LoadProgram(app, "Shaders\\shader_deferred_ssao.vert", "Shaders\\shader_deferred_ssao.frag", "SSAO");
     // Fill vertex shader layout auto
     for (u32 p = 0; p < app->programs.size(); ++p)
     {
@@ -523,12 +572,15 @@ void Update(App* app)
     // Programs hot reload
     CheckShadersHotReload(app);
 
+    app->ssaoData.noiseScale = glm::vec2(app->displaySizeCurrent.x/4.0f, app->displaySizeCurrent.y/4.0f);
+    
     // Uniform buffers push
     Buffer& uniformBuffer = app->uniformBuffer;
     BufferManagement::MapBuffer(uniformBuffer, GL_READ_WRITE);
     PushTransformUBO(app);
-    PushLightDataUBO(app);
+    PushGlobalDataUBO(app);
     PushMaterialDataUBO(app);
+    PushSSAODataUBO(app);
     BufferManagement::UnmapBuffer(uniformBuffer);
 }
 
@@ -724,13 +776,14 @@ void ForwardRenderLightBoxes(App* app)
 
 void DeferredRender(App* app) {
     DeferredRenderGeometryPass(app);
+    DeferredRenderSSAOPass(app);
     DeferredRenderShadingPass(app);
     DeferredRenderDisplayPass(app);
 }
 
 void DeferredRenderGeometryPass(App* app)
 {
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Geometry");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Geometry Pass");
 
     // Render on this framebuffer render targets
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
@@ -805,7 +858,7 @@ void DeferredRenderGeometryPass(App* app)
 
 void DeferredRenderShadingPass(App* app)
 {
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Shader");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Shading Pass");
     // Render on this framebuffer render targets
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
@@ -862,7 +915,7 @@ void DeferredRenderShadingPass(App* app)
 
 void DeferredRenderDisplayPass(App* app)
 {
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Display");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render Display Pass");
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -901,6 +954,9 @@ void DeferredRenderDisplayPass(App* app)
         case GBufferMode::FINAL:
             gBufferModeIdx = app->gFinalResultTextureIdx; // Same as app->colorTextureIdx
             break;
+        case GBufferMode::SSAO:
+            gBufferModeIdx = app->gSSAOTextureIdx; // Same as app->colorTextureIdx
+            break;
         default:
             break;
         }
@@ -910,6 +966,51 @@ void DeferredRenderDisplayPass(App* app)
         mesh.DrawSubMesh(i, app->textures[gBufferModeIdx], app->defaultShaderProgram_uTexture, screenProgram, false);
     }
     glPopDebugGroup();
+    glPopDebugGroup();
+
+    glEnable(GL_DEPTH_TEST);
+}
+void DeferredRenderSSAOPass(App* app)
+{
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Engine Deferred Render SSAO Pass");
+
+    // SSAO FBO Bindings
+    FrameBufferManagement::BindFrameBuffer(app->ssaoFrameBufferObject);
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR};
+    FrameBufferManagement::SetDrawBuffersTextures(attachments);
+
+    // SSAO FBO Clear
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+
+    // RTT necessary to read in order to do SSAO
+    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_POSITION, RT_LOCATION_NORMAL, 3 /*Noise texture*/};
+    const std::vector<u32> texturesUniformHandles = { app->textures[app->gPositionTextureIdx].handle, app->textures[app->gNormalTextureIdx].handle,
+        app->textures[app->ssaoNoiseTextureIdx].handle};
+    
+    // Draw the framebuffer onto a quad that covers the whole screen.
+    const Program& screenProgram = app->programs[app->deferredSSAOProgramIdx];
+    glUseProgram(screenProgram.handle);
+    Model& model = app->models[app->quadModel];
+    Mesh& mesh = app->meshes[model.meshIdx];
+
+    // Screen filling quad rendering needed to do SSAO
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, model.name.c_str());
+    // Bind the global params so shader can read kernel sample data
+    BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_GLOBAL_PARAMS, app->globalParamsSize, app->globalParamsOffset);
+    //BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_SSAO_PARAMS, app->ssaoData.paramsSize, app->ssaoData.paramsOffset);
+    const u32 subMeshCount = static_cast<u32>(mesh.subMeshes.size());
+    for (u32 i = 0; i < subMeshCount; i++)
+    {
+        mesh.DrawSubMesh(i, texturesUniformHandles, texturesUniformLocations, screenProgram, false);
+    }
+    glPopDebugGroup();
+
+    // Unbind the SSAO FBO
+    FrameBufferManagement::UnBindFrameBuffer(app->ssaoFrameBufferObject);
+    
     glPopDebugGroup();
 }
 
@@ -1025,7 +1126,7 @@ void PushTransformUBO(App* app)
     if (app->debugUBO)
         std::cout << "\n";
 }
-void PushLightDataUBO(App* app)
+void PushGlobalDataUBO(App* app)
 {
     Buffer& uniformBuffer = app->uniformBuffer;
 
@@ -1079,6 +1180,30 @@ void PushMaterialDataUBO(App* app)
         // Set buffer block end and set size
         BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, material.paramsSize, material.paramsOffset);
     }
+}
+void PushSSAODataUBO(App* app)
+{
+    Buffer& uniformBuffer = app->uniformBuffer;
+
+    // Set buffer block start and set offset
+    BufferManagement::SetBufferBlockStart(uniformBuffer, BufferManagement::uniformBlockAlignment, app->ssaoData.paramsOffset);
+    
+    for (u32 i = 0; i < app->ssaoData.maxSamples; ++i)
+    {
+        BufferManagement::AlignHead(uniformBuffer, 4 * BASIC_MACHINE_UNIT);
+        PUSH_VEC3(uniformBuffer, app->ssaoData.kernel[i]);
+    }
+    PUSH_U_INT(uniformBuffer, app->ssaoData.kernelSize);
+    PUSH_FLOAT(uniformBuffer, app->ssaoData.radius);
+    PUSH_FLOAT(uniformBuffer, app->ssaoData.bias);
+    PUSH_VEC2(uniformBuffer, app->ssaoData.noiseScale);
+    PUSH_MAT4(uniformBuffer, app->projectionMat);
+
+    // Set buffer block end and set size
+    BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, app->ssaoData.paramsSize, app->ssaoData.paramsOffset);
+
+    if (app->debugUBO)
+        std::cout << "Global Params. " << " Offset: " << app->ssaoData.paramsOffset << " Size: " << app->ssaoData.paramsSize  << "\n";
 }
 
 void OnScreenResize(App* app)

@@ -26,6 +26,8 @@ void DeferredRenderShadingPass(App* app);
 
 void DeferredRenderDisplayPass(App* app);
 
+void DeferredRenderSSAOPass(App* app);
+
 void CheckShadersHotReload(App* app);
 
 void CreateEntity(App* app, const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale,
@@ -36,9 +38,11 @@ void CreateLight(App* app, LightType lightType, const Attenuation& attenuation, 
 
 void PushTransformUBO(App* app);
 
-void PushLightDataUBO(App* app);
+void PushGlobalDataUBO(App* app);
 
 void PushMaterialDataUBO(App* app);
+
+void PushSSAODataUBO(App* app);
 
 void OnScreenResize(App* app);
 

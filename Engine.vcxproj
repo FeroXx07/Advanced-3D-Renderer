@@ -24,6 +24,7 @@
     <ClCompile Include="Code\engine.cpp" />
     <ClCompile Include="Code\platform.cpp" />
     <ClCompile Include="Code\program.cpp" />
+    <ClCompile Include="Code\ssao.cpp" />
     <ClCompile Include="Code\texture.cpp" />
     <ClCompile Include="ThirdParty\glad\include\glad\glad.c" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui.cpp" />
@@ -53,6 +54,7 @@
     <ClInclude Include="Code\mesh_example.h" />
     <ClInclude Include="Code\platform.h" />
     <ClInclude Include="Code\program.h" />
+    <ClInclude Include="Code\ssao.h" />
     <ClInclude Include="Code\texture.h" />
     <ClInclude Include="Code\vertex.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\glad.h" />

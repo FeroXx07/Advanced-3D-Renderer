@@ -30,11 +30,20 @@ struct Material
 	bool hasBumpTexture;
 };
 
+struct ScreenSpaceAmbientOcclusion
+{
+	vec3 samples[64];
+	uint kernelSize;
+	float radius;
+	float bias;
+	vec2 noiseScale;
+};
+
 layout (binding = 0, std140) uniform GlobalParams
 {
 	vec3 uCameraPosition;     		
 	uint uLightCount; 	
-	Light uLight[16];     		   		
+	Light uLight[16];     		  
 };
 
 layout(binding = 1, std140) uniform LocalParams
@@ -48,6 +57,11 @@ layout(binding = 1, std140) uniform LocalParams
 layout(binding = 2, std140) uniform MaterialParams
 {
 	Material material;
+};
+
+layout(binding = 3, std140) uniform SSAOParams
+{
+	ScreenSpaceAmbientOcclusion ssao;
 };
 
 // Can use the same locations for out and in because the belong the different stages in the pipeline.

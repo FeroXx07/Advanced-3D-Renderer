@@ -11,6 +11,7 @@
 #include "program.h"
 #include "texture.h"
 #include "ImGuizmo.h"
+#include "ssao.h"
 
 static const char* RenderingModeStr[] = {"FORWARD", "DEFERRED"};
 
@@ -20,7 +21,7 @@ enum RenderingMode
     DEFERRED
 };
 
-static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "SPECULAR", "DEPTH", "FINAL"};
+static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "SPECULAR", "SSAO", "DEPTH", "FINAL"};
 
 enum GBufferMode
 {
@@ -28,6 +29,7 @@ enum GBufferMode
     NORMAL,
     POSITION,
     SPECULAR,
+    SSAO,
     DEPTH,
     FINAL
 };
@@ -77,6 +79,13 @@ struct App
     RenderingMode renderingMode = RenderingMode::DEFERRED;
     GBufferMode gBufferMode = GBufferMode::FINAL;
 
+    // SSAO (Screen Space Ambient Oclusion)
+    ScreenSpaceAmbientOcclusion ssaoData;
+    Buffer ssaoFrameBufferObject;
+    u32 gSSAOTextureIdx;
+    u32 ssaoNoiseTextureIdx;
+    u32 deferredSSAOProgramIdx;
+    
     // Camera
     Camera camera;
     glm::mat4 projectionMat;

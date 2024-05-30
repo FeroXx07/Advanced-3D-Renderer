@@ -80,6 +80,7 @@ public:
 // sizeof(vec4) is the 4N where, N = 4 bytes is the basic machine unit,
 #define PUSH_DATA(buffer, data, size) BufferManagement::PushAlignedData(buffer, data, size, 1)
 #define PUSH_U_INT(buffer, value) { u32 v = value; BufferManagement::PushAlignedData(buffer, &v, sizeof(v), BASIC_MACHINE_UNIT); }
+#define PUSH_VEC2(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 2 * BASIC_MACHINE_UNIT)
 #define PUSH_VEC3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
 #define PUSH_VEC4(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
 #define PUSH_MAT3(buffer, value) BufferManagement::PushAlignedData(buffer, value_ptr(value), sizeof(value), 4 * BASIC_MACHINE_UNIT)
@@ -116,7 +117,8 @@ enum STD_140_BINDING_POINT
 {
     BP_GLOBAL_PARAMS = 0,
     BP_LOCAL_PARAMS = 1,
-    BP_MATERIAL_PARAMS = 2
+    BP_MATERIAL_PARAMS = 2,
+    BP_SSAO_PARAMS = 3
 };
 
 #endif // BUFFER_MANAGEMENT_H
