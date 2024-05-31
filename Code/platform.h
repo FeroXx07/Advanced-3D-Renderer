@@ -68,17 +68,17 @@ struct String
     u32   len;
 };
 
-String MakeString(const char *cstr);
+std::string MakeString(const char *cstr);
 
-String MakePath(String dir, String filename);
+std::string MakePath(const std::string& dir, const std::string& filename);
 
-String GetDirectoryPart(String path);
+std::string GetDirectoryPart(const std::string& path);
 
 /**
  * Reads a whole file and returns a string with its contents. The returned string
  * is temporary and should be copied if it needs to persist for several frames.
  */
-String ReadTextFile(const char *filepath);
+std::string ReadTextFile(const char *filepath);
 
 /**
  * It retrieves a timestamp indicating the last time the file was modified.

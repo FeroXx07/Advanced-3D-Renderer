@@ -1031,14 +1031,14 @@ void CheckShadersHotReload(App* app)
                 const char* programName = program.programName.c_str();
                 if (program.filePaths.size() > 1)
                 {
-                    const String programSourceVert = ReadTextFile(program.filePaths[0].c_str());
-                    const String programSourceFrag = ReadTextFile(program.filePaths[1].c_str());
-                    program.handle = ShaderSupport::CreateProgramFromSource(programSourceVert.str, programSourceFrag.str, programName);
+                    const std::string programSourceVert = ReadTextFile(program.filePaths[0].c_str());
+                    const std::string programSourceFrag = ReadTextFile(program.filePaths[1].c_str());
+                    program.handle = ShaderSupport::CreateProgramFromSource(programSourceVert.c_str(), programSourceFrag.c_str(), programName);
                 }
                 else
                 {
-                    const String programSource = ReadTextFile(program.filePaths[j].c_str());
-                    program.handle = ShaderSupport::CreateProgramFromSource(programSource.str, programName);
+                    const std::string programSource = ReadTextFile(program.filePaths[j].c_str());
+                    program.handle = ShaderSupport::CreateProgramFromSource(programSource.c_str(), programName);
                 }
                 program.lastWriteTimestamp = currentTimeStamp;
             }

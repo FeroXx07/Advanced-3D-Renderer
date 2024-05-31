@@ -15,7 +15,7 @@ struct AssimpSupport
 {
     static u32 LoadModel(App* app, const char* filename);
     static void ProcessAssimpNode(const aiScene* scene, const aiNode *node, Mesh *myMesh, u32 baseMeshMaterialIndex, std::vector<u32>& submeshMaterialIndices);
-    static void ProcessAssimpMaterial(App* app, const aiMaterial *material, Material& myMaterial, String directory);
+    static void ProcessAssimpMaterial(App* app, const aiMaterial *material, Material& myMaterial, const std::string& directory);
     static void ProcessAssimpMesh(const aiScene* scene, aiMesh *mesh, Mesh *myMesh, u32 baseMeshMaterialIndex, std::vector<u32>& submeshMaterialIndices);
 };
 

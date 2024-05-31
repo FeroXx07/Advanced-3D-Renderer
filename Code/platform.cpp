@@ -375,62 +375,37 @@ u8* PushChar(u8 c)
     return ptr;
 }
 
-String MakeString(const char *cstr)
-{
-    String str = {};
-    str.len = Strlen(cstr);
-    str.str = (char*)PushBytes(cstr, str.len);
-              PushChar(0);
-    return str;
+std::string MakeString(const char* cstr) {
+    return std::string(cstr);
 }
 
-String MakePath(String dir, String filename)
-{
-    String str = {};
-    str.len = dir.len + filename.len + 1;
-    str.str = (char*)PushBytes(dir.str, dir.len);
-              PushChar('/');
-              PushBytes(filename.str, filename.len);
-              PushChar(0);
-    return str;
+std::string MakePath(const std::string& dir, const std::string& filename) {
+    return dir + "/" + filename;
 }
 
-String GetDirectoryPart(String path)
-{
-    String str = {};
-    i32 len = (i32)path.len;
-    while (len >= 0) {
-        len--;
-        if (path.str[len] == '/' || path.str[len] == '\\')
-            break;
+std::string GetDirectoryPart(const std::string& path) {
+    size_t pos = path.find_last_of("/\\");
+    if (pos == std::string::npos) {
+        return "";
     }
-    str.len = (u32)len;
-    str.str = (char*)PushBytes(path.str, str.len);
-              PushChar(0);
-    return str;
+    return path.substr(0, pos);
 }
 
-String ReadTextFile(const char* filepath)
-{
-    String fileText = {};
-
+std::string ReadTextFile(const char* filepath) {
+    std::string fileText;
     FILE* file = fopen(filepath, "rb");
 
-    if (file)
-    {
+    if (file) {
         fseek(file, 0, SEEK_END);
-        fileText.len = ftell(file);
+        size_t len = ftell(file);
         fseek(file, 0, SEEK_SET);
 
-        fileText.str = (char*)PushSize(fileText.len + 1);
-        fread(fileText.str, sizeof(char), fileText.len, file);
-        fileText.str[fileText.len] = '\0';
-
+        fileText.resize(len);
+        fread(&fileText[0], sizeof(char), len, file);
         fclose(file);
     }
-    else
-    {
-        ELOG("fopen() failed reading file %s", filepath);
+    else {
+        fprintf(stderr, "fopen() failed reading file %s\n", filepath);
     }
 
     return fileText;

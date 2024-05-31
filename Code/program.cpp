@@ -135,9 +135,9 @@ GLuint ShaderSupport::CreateProgramFromSource(const std::string& shaderSourceVer
 
 u32 ShaderSupport::LoadProgram(App* app, const char* filepath, const char* programName)
 {
-    const String programSource = ReadTextFile(filepath);
+    const std::string programSource = ReadTextFile(filepath);
     Program program = {};
-    program.handle = CreateProgramFromSource(programSource.str, programName);
+    program.handle = CreateProgramFromSource(programSource.c_str(), programName);
     program.filePaths.emplace_back(filepath);
     program.programName = programName;
     program.lastWriteTimestamp = GetFileLastWriteTimestamp(filepath);
@@ -148,10 +148,10 @@ u32 ShaderSupport::LoadProgram(App* app, const char* filepath, const char* progr
 
 u32 ShaderSupport::LoadProgram(App* app, const char* filepathVert, const char* filepathFrag, const char* programName)
 {
-    const String programSourceVert = ReadTextFile(filepathVert);
-    const String programSourceFrag = ReadTextFile(filepathFrag);
+    const std::string programSourceVert = ReadTextFile(filepathVert);
+    const std::string programSourceFrag = ReadTextFile(filepathFrag);
     Program program = {};
-    program.handle = CreateProgramFromSource(programSourceVert.str, programSourceFrag.str, programName);
+    program.handle = CreateProgramFromSource(programSourceVert.c_str(), programSourceFrag.c_str(), programName);
     program.filePaths.emplace_back(filepathVert);
     program.filePaths.emplace_back(filepathFrag);
     program.programName = programName;

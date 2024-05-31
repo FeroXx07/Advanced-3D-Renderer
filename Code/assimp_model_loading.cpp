@@ -3,6 +3,7 @@
 
 #include "app.h"
 #include "engine.h"
+#include <iostream>
 
 u32 AssimpSupport::LoadModel(App* app, const char* filename)
 {
@@ -39,7 +40,7 @@ u32 AssimpSupport::LoadModel(App* app, const char* filename)
     model.meshIdx = meshIdx;
     const u32 modelIdx = (u32)app->models.size() - 1u;
 
-    const String directory = GetDirectoryPart(MakeString(filename));
+    const std::string directory = GetDirectoryPart(MakeString(filename));
 
     // Create a list of materials and process each material
     const u32 baseMeshMaterialIndex = (u32)app->materials.size();
@@ -116,7 +117,7 @@ void AssimpSupport::ProcessAssimpNode(const aiScene* scene, const aiNode* node, 
     }
 }
 
-void AssimpSupport::ProcessAssimpMaterial(App* app, const aiMaterial* material, Material& myMaterial, String directory)
+void AssimpSupport::ProcessAssimpMaterial(App* app, const aiMaterial* material, Material& myMaterial, const std::string& directory)
 {
     aiString name;
     aiColor3D diffuseColor;
@@ -138,37 +139,37 @@ void AssimpSupport::ProcessAssimpMaterial(App* app, const aiMaterial* material, 
     if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
     {
         material->GetTexture(aiTextureType_DIFFUSE, 0, &aiFilename);
-        const String filename = MakeString(aiFilename.C_Str());
-        const String filepath = MakePath(directory, filename);
-        myMaterial.albedoTextureIdx = TextureSupport::LoadTexture2D(app, filepath.str);
+        const std::string filename = MakeString(aiFilename.C_Str());
+        const std::string filepath = MakePath(directory, filename);
+        myMaterial.albedoTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
     }
     if (material->GetTextureCount(aiTextureType_EMISSIVE) > 0)
     {
         material->GetTexture(aiTextureType_EMISSIVE, 0, &aiFilename);
-        const String filename = MakeString(aiFilename.C_Str());
-        const String filepath = MakePath(directory, filename);
-        myMaterial.emissiveTextureIdx = TextureSupport::LoadTexture2D(app, filepath.str);
+        const std::string filename = MakeString(aiFilename.C_Str());
+        const std::string filepath = MakePath(directory, filename);
+        myMaterial.emissiveTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
     }
     if (material->GetTextureCount(aiTextureType_SPECULAR) > 0)
     {
         material->GetTexture(aiTextureType_SPECULAR, 0, &aiFilename);
-        const String filename = MakeString(aiFilename.C_Str());
-        const String filepath = MakePath(directory, filename);
-        myMaterial.specularTextureIdx = TextureSupport::LoadTexture2D(app, filepath.str);
+        const std::string filename = MakeString(aiFilename.C_Str());
+        const std::string filepath = MakePath(directory, filename);
+        myMaterial.specularTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
     }
     if (material->GetTextureCount(aiTextureType_NORMALS) > 0)
     {
         material->GetTexture(aiTextureType_NORMALS, 0, &aiFilename);
-        const String filename = MakeString(aiFilename.C_Str());
-        const String filepath = MakePath(directory, filename);
-        myMaterial.normalsTextureIdx = TextureSupport::LoadTexture2D(app, filepath.str);
+        const std::string filename = MakeString(aiFilename.C_Str());
+        const std::string filepath = MakePath(directory, filename);
+        myMaterial.normalsTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
     }
     if (material->GetTextureCount(aiTextureType_HEIGHT) > 0)
     {
         material->GetTexture(aiTextureType_HEIGHT, 0, &aiFilename);
-        const String filename = MakeString(aiFilename.C_Str());
-        const String filepath = MakePath(directory, filename);
-        myMaterial.bumpTextureIdx = TextureSupport::LoadTexture2D(app, filepath.str);
+        const std::string filename = MakeString(aiFilename.C_Str());
+        const std::string filepath = MakePath(directory, filename);
+        myMaterial.bumpTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
     }
     //myMaterial.createNormalFromBump();
 }
