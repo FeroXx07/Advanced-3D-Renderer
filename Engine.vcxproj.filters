@@ -60,6 +60,7 @@
     <ClCompile Include="ThirdParty\imguizmo\include\ImGradient.cpp" />
     <ClCompile Include="ThirdParty\imguizmo\include\ImGuizmo.cpp" />
     <ClCompile Include="ThirdParty\imguizmo\include\ImSequencer.cpp" />
+    <ClCompile Include="Code\ssao.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -119,6 +120,7 @@
     <ClInclude Include="ThirdParty\imguizmo\include\ImGuizmo.h" />
     <ClInclude Include="ThirdParty\imguizmo\include\ImSequencer.h" />
     <ClInclude Include="ThirdParty\imguizmo\include\ImZoomSlider.h" />
+    <ClInclude Include="Code\ssao.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\Shaders\shader_deferred_geometry_pass.frag">
@@ -131,6 +133,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="WorkingDir\Shaders\shader_deferred_shading_pass.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_deferred_ssao.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Shaders\shader_deferred_ssao.vert">
       <Filter>Shaders</Filter>
     </None>
     <None Include="WorkingDir\Shaders\shader_lit_base.frag">

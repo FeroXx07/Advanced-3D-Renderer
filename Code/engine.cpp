@@ -54,13 +54,13 @@ void Init(App* app)
     // Bind textures to framebuffer, with the corresponding location.
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gColorTextureIdx].handle, RT_LOCATION_COLOR);
-    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gPositionTextureIdx].handle, RT_LOCATION_POSITION);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gPositionTextureIdx].handle, RT_LOCATION_POSITION_WORLD_SPACE);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gNormalTextureIdx].handle, RT_LOCATION_NORMAL);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gSpecularTextureIdx].handle, RT_LOCATION_SPECULAR_ROUGHNESS);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gFinalResultTextureIdx].handle, RT_LOCATION_FINAL_RESULT);
     FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->gDepthTextureIdx].handle);
     FrameBufferManagement::CheckStatus();
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_FINAL_RESULT};
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_FINAL_RESULT};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
 
@@ -789,7 +789,7 @@ void DeferredRenderGeometryPass(App* app)
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS};
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS};
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glEnable(GL_DEPTH_TEST);
@@ -892,9 +892,9 @@ void DeferredRenderShadingPass(App* app)
     const Program& program = app->programs[app->deferredShadingProgramIdx];
     glUseProgram(program.handle);
 
-    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_COLOR, RT_LOCATION_POSITION, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS};
+    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_SSAO};
     const std::vector<u32> texturesUniformHandles = { app->textures[app->gColorTextureIdx].handle, app->textures[app->gPositionTextureIdx].handle,
-        app->textures[app->gNormalTextureIdx].handle, app->textures[app->gSpecularTextureIdx].handle};
+        app->textures[app->gNormalTextureIdx].handle, app->textures[app->gSpecularTextureIdx].handle, app->textures[app->gSSAOTextureIdx].handle };
     
     Model& model = app->models[app->quadModel];
     Mesh& mesh = app->meshes[model.meshIdx];
@@ -986,7 +986,7 @@ void DeferredRenderSSAOPass(App* app)
     glViewport(0, 0, app->displaySizeCurrent.x, app->displaySizeCurrent.y);
 
     // RTT necessary to read in order to do SSAO
-    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_POSITION, RT_LOCATION_NORMAL, 3 /*Noise texture*/};
+    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, 3 /*Noise texture*/};
     const std::vector<u32> texturesUniformHandles = { app->textures[app->gPositionTextureIdx].handle, app->textures[app->gNormalTextureIdx].handle,
         app->textures[app->ssaoNoiseTextureIdx].handle};
 
@@ -1137,6 +1137,8 @@ void PushGlobalDataUBO(App* app)
     
     const u32 lightsCount = (u32)app->lights.size();
     PUSH_VEC3(uniformBuffer, app->camera.position);
+    PUSH_MAT4(uniformBuffer, app->camera.GetViewMatrix());
+    PUSH_MAT4(uniformBuffer, app->projectionMat);
     PUSH_U_INT(uniformBuffer, lightsCount)
     for (u32 i = 0; i < lightsCount; ++i)
     {
@@ -1203,7 +1205,6 @@ void PushSSAODataUBO(App* app)
     PUSH_FLOAT(uniformBuffer, app->ssaoData.radius);
     PUSH_FLOAT(uniformBuffer, app->ssaoData.bias);
     PUSH_VEC2(uniformBuffer, app->ssaoData.noiseScale);
-    PUSH_MAT4(uniformBuffer, app->projectionMat);
 
     // Set buffer block end and set size
     BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, app->ssaoData.paramsSize, app->ssaoData.paramsOffset);

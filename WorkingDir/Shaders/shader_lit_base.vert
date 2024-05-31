@@ -32,9 +32,11 @@ struct Material
 
 layout (binding = 0, std140) uniform GlobalParams
 {
-	vec3 uCameraPosition;     		
+	vec3 uCameraPosition;   
+	mat4 uViewMatrix;
+	mat4 uProjectionMatrix;	
 	uint uLightCount; 	
-	Light uLight[16];     		   		
+	Light uLight[16];     	
 };
 
 layout(binding = 1, std140) uniform LocalParams

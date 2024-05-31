@@ -95,6 +95,8 @@
     <None Include="WorkingDir\Shaders\shader_deferred_geometry_pass.vert" />
     <None Include="WorkingDir\Shaders\shader_deferred_shading_pass.frag" />
     <None Include="WorkingDir\Shaders\shader_deferred_shading_pass.vert" />
+    <None Include="WorkingDir\Shaders\shader_deferred_ssao.frag" />
+    <None Include="WorkingDir\Shaders\shader_deferred_ssao.vert" />
     <None Include="WorkingDir\Shaders\shader_lit_base.frag" />
     <None Include="WorkingDir\Shaders\shader_lit_base.vert" />
     <None Include="WorkingDir\Shaders\shader_lit_textured.frag" />

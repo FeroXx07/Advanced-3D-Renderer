@@ -36,9 +36,11 @@ struct Material
 
 layout (binding = 0, std140) uniform GlobalParams
 {
-	vec3 uCameraPosition;     		
+	vec3 uCameraPosition;   
+	mat4 uViewMatrix;
+	mat4 uProjectionMatrix;	
 	uint uLightCount; 	
-	Light uLight[16];     		   		
+	Light uLight[16];     	
 };
 
 layout(binding = 1, std140) uniform LocalParams
@@ -56,10 +58,10 @@ layout(binding = 2, std140) uniform MaterialParams
 
 // location in this context are the indices of the draw buffers array.
 layout(location = 0) out vec4 rt0; // Color -> drawBuffers[0] = GL_COLOR_ATTACHMENT#; where # = n  refers to a texture in a frame buffer
-layout(location = 1) out vec4 rt1; // Position
+layout(location = 1) out vec4 rt1; // Position world space
 layout(location = 2) out vec4 rt2; // Normals
 layout(location = 3) out vec4 rt3; // Specular, roughness
-layout(location = 4) out vec4 rt4; // Emissive + lightmaps
+layout(location = 4) out vec4 rt4; // Position view space
 
 void main()
 {

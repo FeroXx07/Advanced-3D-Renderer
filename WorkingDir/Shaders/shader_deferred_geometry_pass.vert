@@ -32,9 +32,11 @@ struct Material
 
 layout (binding = 0, std140) uniform GlobalParams
 {
-	vec3 uCameraPosition;     		
+	vec3 uCameraPosition;   
+	mat4 uViewMatrix;
+	mat4 uProjectionMatrix;	
 	uint uLightCount; 	
-	Light uLight[16];     		   		
+	Light uLight[16];     	
 };
 
 layout(binding = 1, std140) uniform LocalParams
@@ -60,10 +62,15 @@ layout(location = 4) out mat3 vTBN;
 void main() {
     vTextCoord = aTextCoord;
 	vPosition = vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	
+	mat3 normalMatrix = transpose(inverse(mat3(uViewMatrix * uWorldMatrix)));
+
 	vec3 T = normalize(vec3(uWorldMatrix * vec4(aTangent,   0.0)));
     vec3 B = normalize(vec3(uWorldMatrix * vec4(aBitangent, 0.0)));
     vec3 N = normalize(vec3(uWorldMatrix * vec4(aNormal,    0.0)));
+
+	/*vec3 T = normalize(vec3(uWorldMatrix * vec4(aTangent,   0.0)));
+    vec3 B = normalize(vec3(uWorldMatrix * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(uWorldMatrix * vec4(aNormal,    0.0)));*/
     vTBN = mat3(T, B, N);
 	
 	vNormal = N;

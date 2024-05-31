@@ -9,6 +9,7 @@ layout (binding = 0) uniform sampler2D uRTColor;
 layout (binding = 1) uniform sampler2D uRTPosition; 
 layout (binding = 2) uniform sampler2D uRTNormals; 
 layout (binding = 3) uniform sampler2D uRTSpecularRoughness; 
+layout (binding = 4) uniform sampler2D uRTSSAO; 
 
 struct Light					
 {
@@ -36,11 +37,12 @@ struct Material
 
 layout (binding = 0, std140) uniform GlobalParams
 {
-	vec3 uCameraPosition;     		
+	vec3 uCameraPosition;   
+	mat4 uViewMatrix;
+	mat4 uProjectionMatrix;	
 	uint uLightCount; 	
-	Light uLight[16];     		   		
+	Light uLight[16];     	
 };
-
 layout(binding = 1, std140) uniform LocalParams
 {
 	vec4 uColor;
@@ -68,10 +70,11 @@ void main()
     vec3 normal = texture(uRTNormals, sTextCoord).rgb;
     vec3 albedo = texture(uRTColor, sTextCoord).rgb;
 	float specularStrength = texture(uRTSpecularRoughness, sTextCoord).r;
-	
+	float ambientOcclusion = texture(uRTSSAO, sTextCoord).r;
+
     float ambientStrength = 0.1;
     
-    vec3 result = albedo * ambientStrength; 
+    vec3 result = albedo * ambientStrength * ambientOcclusion; 
     vec3 nViewDir = normalize(uCameraPosition - fragPos);
 	
 	for (int i = 0; i < uLightCount; ++i)
