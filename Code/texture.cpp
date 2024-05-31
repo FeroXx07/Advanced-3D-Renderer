@@ -34,7 +34,7 @@ GLuint TextureSupport::CreateTexture2DFromImage(const Image& image)
 
     switch (image.nchannels)
     {
-    case 1: dataFormat = GL_RED; internalFormat = GL_R8; break;
+    case 1: dataFormat = GL_RED; internalFormat = GL_RGB8; break;
     case 3: dataFormat = GL_RGB; internalFormat = GL_RGB8; break;
     case 4: dataFormat = GL_RGBA; internalFormat = GL_RGBA8; break;
     default: ELOG("LoadTexture2D() - Unsupported number of channels")

@@ -72,7 +72,7 @@ void main()
 	}
 	
 	vec3 normal = normalize(sNormal);
-	if (material.hasBumpTexture)
+	if (material.hasNormalsTexture)
 	{
 		normal = texture(uTextureBump, sTextCoord).rgb;
 		normal = normal * 2.0 - 1.0;   

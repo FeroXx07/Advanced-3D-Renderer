@@ -652,8 +652,8 @@ void ForwardRender(App* app)
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
             BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);
 
-            const std::vector<u32> texturesUniformLocations = { MAT_T_DIFFUSE, MAT_T_BUMP, MAT_T_SPECULAR };
-            const std::vector<u32> texturesUniformHandles = { app->textures[subMeshMaterial.albedoTextureIdx].handle, app->textures[subMeshMaterial.bumpTextureIdx].handle,
+            const std::vector<u32> texturesUniformLocations = { MAT_T_DIFFUSE, MAT_T_NORMALS, MAT_T_SPECULAR };
+            const std::vector<u32> texturesUniformHandles = { app->textures[subMeshMaterial.albedoTextureIdx].handle, app->textures[subMeshMaterial.normalsTextureIdx].handle,
                 app->textures[subMeshMaterial.specularTextureIdx].handle};
             
             mesh.DrawSubMesh(i, texturesUniformHandles, texturesUniformLocations, program, false);
@@ -841,8 +841,8 @@ void DeferredRenderGeometryPass(App* app)
             const u32 subMeshMaterialIdx = model.materialIdx[i];
             const Material subMeshMaterial = app->materials[subMeshMaterialIdx];
 
-            const std::vector<u32> texturesUniformLocations = { MAT_T_DIFFUSE, MAT_T_BUMP, MAT_T_SPECULAR };
-            const std::vector<u32> texturesUniformHandles = { app->textures[subMeshMaterial.albedoTextureIdx].handle, app->textures[subMeshMaterial.bumpTextureIdx].handle,
+            const std::vector<u32> texturesUniformLocations = { MAT_T_DIFFUSE, MAT_T_NORMALS, MAT_T_SPECULAR };
+            const std::vector<u32> texturesUniformHandles = { app->textures[subMeshMaterial.albedoTextureIdx].handle, app->textures[subMeshMaterial.normalsTextureIdx].handle,
                 app->textures[subMeshMaterial.specularTextureIdx].handle};
             
             BufferManagement::BindBufferRange(app->uniformBuffer, STD_140_BINDING_POINT::BP_MATERIAL_PARAMS, subMeshMaterial.paramsSize, subMeshMaterial.paramsOffset);

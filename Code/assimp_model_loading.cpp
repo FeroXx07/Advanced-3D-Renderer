@@ -4,6 +4,7 @@
 #include "app.h"
 #include "engine.h"
 #include <iostream>
+#include <filesystem> 
 
 u32 AssimpSupport::LoadModel(App* app, const char* filename)
 {
@@ -162,14 +163,25 @@ void AssimpSupport::ProcessAssimpMaterial(App* app, const aiMaterial* material, 
         material->GetTexture(aiTextureType_NORMALS, 0, &aiFilename);
         const std::string filename = MakeString(aiFilename.C_Str());
         const std::string filepath = MakePath(directory, filename);
-        myMaterial.normalsTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
     }
     if (material->GetTextureCount(aiTextureType_HEIGHT) > 0)
     {
         material->GetTexture(aiTextureType_HEIGHT, 0, &aiFilename);
         const std::string filename = MakeString(aiFilename.C_Str());
         const std::string filepath = MakePath(directory, filename);
-        myMaterial.bumpTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
+        myMaterial.normalsTextureIdx = TextureSupport::LoadTexture2D(app, filepath.c_str());
+
+        size_t lastUnderScoreIdx = filename.rfind('_');
+
+        if (lastUnderScoreIdx != std::string::npos) {
+            // Replace the part after the last underscore with 'bump'
+            std::string bumpFileName = filename.substr(0, lastUnderScoreIdx) + "_bump" + filename.substr(filename.rfind('.')); // Output: xxxx_bump.png
+            const std::string bumpFilePath = MakePath(directory, bumpFileName);
+            if (std::filesystem::exists(bumpFilePath)) {
+                std::cout << "Bump File exists: " << bumpFilePath << std::endl;
+                myMaterial.bumpTextureIdx = TextureSupport::LoadTexture2D(app, bumpFilePath.c_str());
+            }
+        }
     }
     //myMaterial.createNormalFromBump();
 }
