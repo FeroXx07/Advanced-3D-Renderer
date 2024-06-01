@@ -24,6 +24,8 @@
 | ------------- | ------------- | ------------- |------------- |
 |  Effect | <img src="https://github.com/FeroXx07/Advanced-3D-Renderer/blob/main/Docs/Images/ParallaxMapping_Example_One-0.png?raw=true" alt="Height scale = 0 (Off)" width="350"/> | <img src="https://github.com/FeroXx07/Advanced-3D-Renderer/blob/main/Docs/Images/ParallaxMapping_Example_One-1.png?raw=true" alt="Height scale low" width="350"/> |  <img src="https://github.com/FeroXx07/Advanced-3D-Renderer/blob/main/Docs/Images/ParallaxMapping_Example_One-2.png?raw=true" alt="Height scale high" width="350"/> |
 
+Through the slider in the material section of the resources visualizer you can enable, disable and manipulate this effect.
+
 [PARALLAX SHADER VERTEX](https://github.com/FeroXx07/Advanced-3D-Renderer/blob/main/WorkingDir/Shaders/shader_deferred_shading_pass.vert)
 [PARALLAX SHADER FRAG](https://github.com/FeroXx07/Advanced-3D-Renderer/blob/main/WorkingDir/Shaders/shader_deferred_shading_pass.frag)
 
