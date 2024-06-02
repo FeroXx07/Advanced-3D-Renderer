@@ -21,12 +21,13 @@ enum RenderingMode
     DEFERRED
 };
 
-static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "POSITION", "SPECULAR", "SSAO", "DEPTH", "FINAL"};
+static const char* GBufferModeStr[] = { "COLOR", "NORMAL", "BUMP", "POSITION", "SPECULAR", "SSAO", "DEPTH", "FINAL" };
 
 enum GBufferMode
 {
     COLOR,
     NORMAL,
+    BUMP,
     POSITION,
     SPECULAR,
     SSAO,
@@ -71,6 +72,7 @@ struct App
     u32 gColorTextureIdx;
     u32 gDepthTextureIdx;
     u32 gNormalTextureIdx;
+    u32 gBumpTextureIdx;
     u32 gPositionTextureIdx;
     u32 gSpecularTextureIdx;
     u32 gFinalResultTextureIdx;
