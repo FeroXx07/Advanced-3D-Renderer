@@ -5,6 +5,8 @@ layout(location = 1) in vec3 aNormal; // In local tangent space
 layout(location = 2) in vec2 aTextCoord;
 layout(location = 3) in vec3 aTangent; // In local tangent space
 layout(location = 4) in vec3 aBitangent; // In local tangent space
+layout(location = 4) out vec3 vTangent; 
+layout(location = 5) out mat3 vTBN;
 
 struct Light					
 {
@@ -74,7 +76,8 @@ void main() {
     vTBN = mat3(T, B, N);
 	
 	vNormal = N;
-	
+	vTangent = T;
+
 	vViewDir = uCameraPosition - vPosition;
 	gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);
 	float a = material.albedo.x;

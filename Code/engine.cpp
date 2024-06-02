@@ -47,6 +47,7 @@ void Init(App* app)
     app->gColorTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Color", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gPositionTextureIdx = TextureSupport::CreateEmptyColorTexture_16Bit_F_RGBA(app, "FBO Position", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gNormalTextureIdx = TextureSupport::CreateEmptyColorTexture_16Bit_F_RGBA(app, "FBO Normal", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
+    app->gTangentTextureIdx = TextureSupport::CreateEmptyColorTexture_16Bit_F_RGBA(app, "FBO Tangent", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gBumpTextureIdx = TextureSupport::CreateEmptyColorTexture_16Bit_F_RGBA(app, "FBO Bump", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gSpecularTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_R(app, "FBO Specular", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
     app->gFinalResultTextureIdx = TextureSupport::CreateEmptyColorTexture_8Bit_RGBA(app, "FBO Final Result", app->displaySizeCurrent.x, app->displaySizeCurrent.y);
@@ -57,12 +58,13 @@ void Init(App* app)
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gColorTextureIdx].handle, RT_LOCATION_COLOR);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gPositionTextureIdx].handle, RT_LOCATION_POSITION_WORLD_SPACE);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gNormalTextureIdx].handle, RT_LOCATION_NORMAL);
+    FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gTangentTextureIdx].handle, RT_LOCATION_TANGENT);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gBumpTextureIdx].handle, RT_LOCATION_BUMP);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gSpecularTextureIdx].handle, RT_LOCATION_SPECULAR_ROUGHNESS);
     FrameBufferManagement::SetColorAttachment(app->frameBufferObject, app->textures[app->gFinalResultTextureIdx].handle, RT_LOCATION_FINAL_RESULT);
     FrameBufferManagement::SetDepthAttachment(app->frameBufferObject, app->textures[app->gDepthTextureIdx].handle);
     FrameBufferManagement::CheckStatus();
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_BUMP, RT_LOCATION_FINAL_RESULT };
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_BUMP, RT_LOCATION_TANGENT, RT_LOCATION_FINAL_RESULT };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
     FrameBufferManagement::UnBindFrameBuffer(app->frameBufferObject);
 
@@ -102,9 +104,9 @@ void Init(App* app)
 
     // Set the corresponding texture bindings to the ssao fbo
     FrameBufferManagement::BindFrameBuffer(app->ssaoFrameBufferObject);
-    FrameBufferManagement::SetColorAttachment(app->ssaoFrameBufferObject, app->textures[app->gSSAOTextureIdx].handle, RT_LOCATION_COLOR);
+    FrameBufferManagement::SetColorAttachment(app->ssaoFrameBufferObject, app->textures[app->gSSAOTextureIdx].handle, RT_LOCATION_SSAO);
     FrameBufferManagement::CheckStatus();
-    const std::vector<u32> ssaoAttachments = { RT_LOCATION_COLOR};
+    const std::vector<u32> ssaoAttachments = { RT_LOCATION_SSAO };
     FrameBufferManagement::SetDrawBuffersTextures(ssaoAttachments);
     FrameBufferManagement::UnBindFrameBuffer(app->ssaoFrameBufferObject);
     
@@ -791,7 +793,7 @@ void DeferredRenderGeometryPass(App* app)
     FrameBufferManagement::BindFrameBuffer(app->frameBufferObject);
 
     // Select on which render targets to draw
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_BUMP };
+    const std::vector<u32> attachments = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_BUMP, RT_LOCATION_TANGENT };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     glEnable(GL_DEPTH_TEST);
@@ -894,10 +896,10 @@ void DeferredRenderShadingPass(App* app)
     const Program& program = app->programs[app->deferredShadingProgramIdx];
     glUseProgram(program.handle);
 
-    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_SSAO, RT_LOCATION_BUMP };
+    const std::vector<u32> texturesUniformLocations = { RT_LOCATION_COLOR, RT_LOCATION_POSITION_WORLD_SPACE, RT_LOCATION_NORMAL, RT_LOCATION_SPECULAR_ROUGHNESS, RT_LOCATION_SSAO, RT_LOCATION_BUMP, RT_LOCATION_TANGENT };
     const std::vector<u32> texturesUniformHandles = { app->textures[app->gColorTextureIdx].handle, app->textures[app->gPositionTextureIdx].handle,
          app->textures[app->gNormalTextureIdx].handle, app->textures[app->gSpecularTextureIdx].handle, app->textures[app->gSSAOTextureIdx].handle,
-        app->textures[app->gBumpTextureIdx].handle };
+        app->textures[app->gBumpTextureIdx].handle, app->textures[app->gTangentTextureIdx].handle };
 
     
     Model& model = app->models[app->quadModel];
@@ -946,6 +948,9 @@ void DeferredRenderDisplayPass(App* app)
         case GBufferMode::NORMAL:
             gBufferModeIdx = app->gNormalTextureIdx;
             break;
+        case GBufferMode::TANGENT:
+            gBufferModeIdx = app->gTangentTextureIdx;
+            break;
         case GBufferMode::BUMP:
             gBufferModeIdx = app->gBumpTextureIdx;
             break;
@@ -983,7 +988,7 @@ void DeferredRenderSSAOPass(App* app)
 
     // SSAO FBO Bindings
     FrameBufferManagement::BindFrameBuffer(app->ssaoFrameBufferObject);
-    const std::vector<u32> attachments = { RT_LOCATION_COLOR};
+    const std::vector<u32> attachments = { RT_LOCATION_SSAO };
     FrameBufferManagement::SetDrawBuffersTextures(attachments);
 
     // SSAO FBO Clear
