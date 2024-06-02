@@ -35,6 +35,7 @@ struct Material
 	bool hasSpecularTexture;
 	bool hasNormalsTexture;
 	bool hasBumpTexture;
+	float heightScale;
 };
 
 layout (binding = 0, std140) uniform GlobalParams
@@ -74,10 +75,9 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir, out bool hasBump)
 		return texCoords;
 	}
 
-	float heightScale = 0.015f;
     float height = 1 - texture(uRTBump, texCoords).r;
 	hasBump = true;
-    return texCoords - viewDir.xy * (height * heightScale);        
+    return texCoords - viewDir.xy * (height * material.heightScale);        
 }
 
 vec2 ParallaxMapping2(vec2 texCoords, vec3 viewDir, out bool hasBump)
@@ -89,7 +89,6 @@ vec2 ParallaxMapping2(vec2 texCoords, vec3 viewDir, out bool hasBump)
 	}
 
 	hasBump=true;
-	float heightScale = 0.01f;
 	// number of depth layers
     const float minLayers = 128;
     const float maxLayers = 254;
@@ -99,11 +98,11 @@ vec2 ParallaxMapping2(vec2 texCoords, vec3 viewDir, out bool hasBump)
     // depth of current layer
     float currentLayerDepth = 0.0;
     // the amount to shift the texture coordinates per layer (from vector P)
-    vec2 P = viewDir.xy / viewDir.z * heightScale; 
+    vec2 P = viewDir.xy / viewDir.z * material.heightScale;  
     vec2 deltaTexCoords = P / numLayers;
   
     // get initial values
-    vec2  currentTexCoords     = texCoords;
+    vec2  currentTexCoords = texCoords;
     float currentDepthMapValue = 1-texture(uRTBump, currentTexCoords).r;
       
     while(currentLayerDepth < currentDepthMapValue)

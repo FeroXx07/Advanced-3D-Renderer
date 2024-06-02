@@ -328,7 +328,7 @@ static void PopStyleCompact()
     ImGui::PopStyleVar(2);
 }
 
-void ResourcesGUI(const App* app)
+void ResourcesGUI(App* app)
 {
     ImGui::Begin("Resources");
     if (ImGui::CollapsingHeader("Frame Buffer", ImGuiTreeNodeFlags_DefaultOpen))
@@ -495,7 +495,7 @@ void ResourcesGUI(const App* app)
     {
         PushStyleCompact();
         static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
-        if (ImGui::BeginTable("Materials table", 10, flags))
+        if (ImGui::BeginTable("Materials table", 11, flags))
         {
             ImGui::TableSetupColumn("Idx vector", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
@@ -507,11 +507,12 @@ void ResourcesGUI(const App* app)
             ImGui::TableSetupColumn("SpecularTextureIdx", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("NormalsTextureIdx", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("BumpTextureIdx", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("HeightScale", ImGuiTableColumnFlags_WidthFixed);
 
             ImGui::TableHeadersRow();
             for (int row = 0; row < app->materials.size(); row++)
             {
-                const Material& mat = app->materials.at(row);
+                Material& mat = app->materials.at(row);
                 ImGui::TableNextRow();
                 
                 ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(row).c_str());
@@ -524,6 +525,7 @@ void ResourcesGUI(const App* app)
                 ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.specularTextureIdx).c_str());
                 ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.normalsTextureIdx).c_str());
                 ImGui::TableNextColumn(); ImGui::Text((const char*)std::to_string(mat.bumpTextureIdx).c_str());
+                ImGui::TableNextColumn(); ImGui::SliderFloat((const char*)std::to_string(mat.heightScale).c_str(), &mat.heightScale, 0.0f, 0.2f);
             }
             ImGui::EndTable();
             PopStyleCompact();
@@ -1193,6 +1195,7 @@ void PushMaterialDataUBO(App* app)
         PUSH_U_INT(uniformBuffer, (material.specularTextureIdx != 0) ? true : false); 
         PUSH_U_INT(uniformBuffer, (material.normalsTextureIdx != 0) ? true : false); 
         PUSH_U_INT(uniformBuffer, (material.bumpTextureIdx != 0) ? true : false); 
+        PUSH_FLOAT(uniformBuffer, material.heightScale);
         // Set buffer block end and set size
         BufferManagement::SetBufferBlockEnd(uniformBuffer, BufferManagement::uniformBlockAlignment, material.paramsSize, material.paramsOffset);
     }

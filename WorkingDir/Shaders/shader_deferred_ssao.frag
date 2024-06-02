@@ -32,6 +32,7 @@ struct Material
 	bool hasSpecularTexture;
 	bool hasNormalsTexture;
 	bool hasBumpTexture;
+	float heightScale;
 };
 
 struct ScreenSpaceAmbientOcclusion
