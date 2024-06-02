@@ -28,7 +28,6 @@ struct Material
 	bool hasSpecularTexture;
 	bool hasNormalsTexture;
 	bool hasBumpTexture;
-	float heightScale;
 };
 
 layout (binding = 0, std140) uniform GlobalParams
@@ -58,8 +57,7 @@ layout(location = 0) out vec3 vPosition;
 layout(location = 1) out vec3 vNormal; // In world tangent space
 layout(location = 2) out vec2 vTextCoord; // In worldspace
 layout(location = 3) out vec3 vViewDir; // In worldspace
-layout(location = 4) out vec3 vTangent; 
-layout(location = 5) out mat3 vTBN; 
+layout(location = 4) out mat3 vTBN; 
 
 void main() {
     vTextCoord = aTextCoord;
@@ -76,8 +74,7 @@ void main() {
     vTBN = mat3(T, B, N);
 	
 	vNormal = N;
-	vTangent = T;
-
+	
 	vViewDir = uCameraPosition - vPosition;
 	gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);
 	float a = material.albedo.x;

@@ -28,7 +28,7 @@ struct Material
     u32 specularTextureIdx;
     u32 normalsTextureIdx;
     u32 bumpTextureIdx;
-    f32 heightScale = 0.01f;
+    
     u32 paramsOffset;
     u32 paramsSize;
 };

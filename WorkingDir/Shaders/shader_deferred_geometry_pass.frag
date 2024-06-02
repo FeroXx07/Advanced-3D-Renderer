@@ -4,13 +4,11 @@ layout(location = 0) in vec3 sPosition; // In worldspace
 layout(location = 1) in vec3 sNormal; // In worldspace
 layout(location = 2) in vec2 sTextCoord; 
 layout(location = 3) in vec3 sViewDir; // In worldspace
-layout(location = 4) in vec3 sTangent; 
-layout(location = 5) in mat3 sTBN; 
+layout(location = 4) in mat3 sTBN; 
 
 layout (binding = 0) uniform sampler2D uTextureDiffuse; // www.khronos.org/opengl/wiki/Uniform_(GLSL)
-layout (binding = 1) uniform sampler2D uTextureNormals; 
+layout (binding = 1) uniform sampler2D uTextureBump; 
 layout (binding = 2) uniform sampler2D uTextureSpecular; 
-layout (binding = 3) uniform sampler2D uTextureBump; 
 
 struct Light					
 {
@@ -34,7 +32,6 @@ struct Material
 	bool hasSpecularTexture;
 	bool hasNormalsTexture;
 	bool hasBumpTexture;
-	float heightScale;
 };
 
 layout (binding = 0, std140) uniform GlobalParams
@@ -64,8 +61,7 @@ layout(location = 0) out vec4 rt0; // Color -> drawBuffers[0] = GL_COLOR_ATTACHM
 layout(location = 1) out vec4 rt1; // Position world space
 layout(location = 2) out vec4 rt2; // Normals
 layout(location = 3) out vec4 rt3; // Specular, roughness
-layout(location = 4) out vec4 rt4; // Bump
-layout(location = 5) out vec4 rt5; // Tangent
+layout(location = 4) out vec4 rt4; // Position view space
 
 void main()
 {
@@ -78,7 +74,7 @@ void main()
 	vec3 normal = normalize(sNormal);
 	if (material.hasNormalsTexture)
 	{
-		normal = texture(uTextureNormals, sTextCoord).rgb;
+		normal = texture(uTextureBump, sTextCoord).rgb;
 		normal = normal * 2.0 - 1.0;   
 		normal = normalize(sTBN * normal);
 	}
@@ -89,16 +85,8 @@ void main()
 		specularStrength = texture(uTextureSpecular, sTextCoord).r;
 	}
 	
-	float bump = 0.0;
-	if (material.hasBumpTexture)
-	{
-		bump = texture(uTextureBump, sTextCoord).r;
-	}
-
     rt0 = objectColor;
 	rt1 = vec4(sPosition, 1.0);
 	rt2 = vec4(normal, 1.0);
 	rt3 = vec4(specularStrength, specularStrength, specularStrength, 1.0);
-	rt4 = vec4(bump, bump, bump, 1.0);
-	rt5 = vec4(sTangent, 1.0);
 }

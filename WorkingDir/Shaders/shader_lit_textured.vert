@@ -28,7 +28,6 @@ struct Material
 	bool hasSpecularTexture;
 	bool hasNormalsTexture;
 	bool hasBumpTexture;
-	float heightScale;
 };
 
 layout (binding = 0, std140) uniform GlobalParams

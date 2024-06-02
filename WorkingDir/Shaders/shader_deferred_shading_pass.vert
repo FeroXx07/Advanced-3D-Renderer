@@ -15,7 +15,6 @@ struct Light
     float quadratic;
 	float radius;	
 };
-
 struct Material
 {
 	vec3 albedo;
@@ -26,7 +25,6 @@ struct Material
 	bool hasSpecularTexture;
 	bool hasNormalsTexture;
 	bool hasBumpTexture;
-	float heightScale;
 };
 
 layout (binding = 0, std140) uniform GlobalParams
